@@ -13,27 +13,51 @@ if (url.searchParams.get("success") === "account_created") {
 
 if (Astro.request.method === "POST") {
   const data = await Astro.request.formData();
-  const email = String(data.get("email") || "");
+  const email = String(data.get("email") || "").trim();
   const password = String(data.get("password") || "");
   
-  try {
-    // Authentifier l'utilisateur
-    const authData = await pb.collection("users").authWithPassword(email, password);
-    
-    // Créer un cookie avec le token d'authentification
-    const cookie = pb.authStore.exportToCookie();
-    
-    // Rediriger avec le cookie
-    return new Response(null, {
-      status: 302,
-      headers: {
-        "Location": "/mes-modeles",
-        "Set-Cookie": cookie
+  // Validation basique
+  if (!email || !password) {
+    error = "Veuillez remplir tous les champs.";
+  } else {
+    try {
+      console.log("Tentative de connexion pour:", email);
+      
+      // Authentifier l'utilisateur
+      const authData = await pb.collection("users").authWithPassword(email, password);
+      
+      console.log("Connexion réussie pour:", authData.record.email);
+      
+      // Créer un cookie avec le token d'authentification
+      const cookie = pb.authStore.exportToCookie({
+        httpOnly: false, // Permet l'accès côté client
+        secure: false,   // À mettre à true en production avec HTTPS
+        sameSite: 'lax',
+        path: '/'
+      });
+      
+      // Rediriger avec le cookie
+      return new Response(null, {
+        status: 302,
+        headers: {
+          "Location": "/mes-modeles",
+          "Set-Cookie": cookie
+        }
+      });
+    } catch (e: any) {
+      console.error("Erreur de connexion:", e);
+      
+      // Messages d'erreur plus spécifiques
+      if (e?.status === 400) {
+        error = "Email ou mot de passe incorrect.";
+      } else if (e?.status === 429) {
+        error = "Trop de tentatives. Veuillez réessayer dans quelques minutes.";
+      } else if (e?.message?.includes("Failed to authenticate")) {
+        error = "Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.";
+      } else {
+        error = `Erreur de connexion : ${e?.message || "Erreur inconnue"}`;
       }
-    });
-  } catch (e: any) {
-    console.error("Login error:", e);
-    error = "Email ou mot de passe incorrect. Veuillez réessayer.";
+    }
   }
 }
 ---
@@ -152,6 +176,7 @@ if (Astro.request.method === "POST") {
                   placeholder="votre@email.com"
                   class="input input-bordered w-full"
                   autocomplete="email"
+                  value={error ? (Astro.request.method === "POST" ? String(await Astro.request.formData().then(d => d.get("email"))) : "") : ""}
                 />
               </div>
 
@@ -235,6 +260,19 @@ if (Astro.request.method === "POST") {
             </a>
           </p>
         </div>
+
+        <!-- Debug info (à retirer en production) -->
+        {import.meta.env.MODE === 'development' && (
+          <div class="text-xs text-gray-500 text-center">
+            <details>
+              <summary class="cursor-pointer">Infos de debug</summary>
+              <div class="mt-2 p-2 bg-gray-100 rounded text-left">
+                <p>Mode: {import.meta.env.MODE}</p>
+                <p>URL PocketBase: {import.meta.env.MODE === 'development' ? 'http://localhost:8090' : 'https://sea301.manolia.kocaoglu.fr:443'}</p>
+              </div>
+            </details>
+          </div>
+        )}
 
       </div>
 
