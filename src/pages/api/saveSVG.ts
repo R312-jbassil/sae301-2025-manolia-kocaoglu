@@ -10,18 +10,31 @@ export const POST: APIRoute = async ({ request }) => {
     try { pb.authStore.loadFromCookie(cookie); } catch {}
 
     if (!pb.authStore.isValid) {
-      return new Response("Unauthorized", { status: 401 });
+      return new Response(JSON.stringify({ error: "Non connecté. Veuillez vous connecter." }), { 
+        status: 401,
+        headers: { "content-type": "application/json" }
+      });
     }
 
     const data = await request.json();
 
-    // Option A : si tu utilises une relation `lunettes.id_utilisateur` → `utilisateur`
-    // et que ton profil `utilisateur` a le même id que `users.id`,
-    // alors:
+    // Récupérer l'ID de l'utilisateur connecté
     const userId = pb.authStore.model?.id;
-    // Essaye de créer si ton schéma l'exige explicitement (sinon enlève la ligne suivante):
-    // data.id_utilisateur = userId;
+    
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "Utilisateur non identifié" }), { 
+        status: 401,
+        headers: { "content-type": "application/json" }
+      });
+    }
+    
+    // IMPORTANT : Assigner l'id_utilisateur pour lier le modèle à l'utilisateur
+    data.id_utilisateur = userId;
 
+    console.log("Saving model for user:", userId);
+    console.log("Model data:", data);
+
+    // Créer le modèle dans la collection lunettes
     const rec = await pb.collection("lunettes").create(data);
 
     return new Response(JSON.stringify(rec), {
@@ -29,6 +42,13 @@ export const POST: APIRoute = async ({ request }) => {
       headers: { "content-type": "application/json" }
     });
   } catch (e: any) {
-    return new Response(e?.message || "Error", { status: 500 });
+    console.error("Error saving model:", e);
+    return new Response(JSON.stringify({ 
+      error: e?.message || "Erreur lors de la sauvegarde",
+      details: e
+    }), { 
+      status: 500,
+      headers: { "content-type": "application/json" }
+    });
   }
 };

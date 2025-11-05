@@ -17,9 +17,22 @@ if (Astro.request.method === "POST") {
   const password = String(data.get("password") || "");
   
   try {
-    await pb.collection("users").authWithPassword(email, password);
-    return Astro.redirect("/mes-modeles");
+    // Authentifier l'utilisateur
+    const authData = await pb.collection("users").authWithPassword(email, password);
+    
+    // Créer un cookie avec le token d'authentification
+    const cookie = pb.authStore.exportToCookie();
+    
+    // Rediriger avec le cookie
+    return new Response(null, {
+      status: 302,
+      headers: {
+        "Location": "/mes-modeles",
+        "Set-Cookie": cookie
+      }
+    });
   } catch (e: any) {
+    console.error("Login error:", e);
     error = "Email ou mot de passe incorrect. Veuillez réessayer.";
   }
 }
