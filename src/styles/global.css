@@ -1,33 +1,28 @@
-@import "tailwindcss";
+/* Tailwind v4 scan des fichiers */
+@import "tailwindcss" source("./src/**/*.{astro,html,js,jsx,ts,tsx,svelte,vue}");
 
-@plugin "daisyui" {
-  themes: all;
+/* Active DaisyUI + sélectionne ton thème par défaut */
+@plugin "daisyui" { themes: lunettes --default, light, dark; }
+
+/* Colle TON thème généré */
+@plugin "daisyui/theme" {
+  name:"lunettes"; default:false; prefersdark:false; color-scheme:"dark";
+  --color-base-100: oklch(98% 0 0);
+  --color-base-200: oklch(98% 0.001 106.423);
+  --color-base-300: oklch(87% 0.01 258.338);
+  --color-base-content: oklch(20% 0.042 265.755);
+  --color-primary:#34495E; --color-primary-content:oklch(98% 0.002 247.839);
+  --color-secondary:#8B7355; --color-secondary-content:oklch(87% 0.006 286.286);
+  --color-accent:#C9A885; --color-accent-content:oklch(14% 0.005 285.823);
+  --color-neutral:#F5F5F0; --color-neutral-content:oklch(98% 0.003 247.858);
+  --color-info:oklch(48% 0.243 264.376); --color-info-content:oklch(96% 0.003 264.542);
+  --color-success:oklch(72% 0.219 149.579); --color-success-content:oklch(0% 0 0);
+  --color-warning:oklch(75% 0.183 55.934); --color-warning-content:oklch(26% 0.079 36.259);
+  --color-error:oklch(50% 0.213 27.518); --color-error-content:oklch(96% 0.007 247.896);
+  --radius-selector:1rem; --radius-field:.25rem; --radius-box:1rem;
+  --size-selector:.25rem; --size-field:.25rem; --border:1px; --depth:0; --noise:1;
 }
 
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
-
-/* Custom styles */
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  body {
-    @apply font-sans;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
-  }
-}
-
-@layer components {
-  .btn-tavue {
-    @apply btn btn-primary hover:shadow-lg transition-all duration-300;
-  }
-  
-  .card-tavue {
-    @apply card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300;
-  }
-}
+/* (facultatif) tes fonts & utilitaires */
+@theme { --font-sans:"Inter",system-ui,sans-serif; --font-serif:"Playfair Display",serif; }
+@layer base { body{ font-family:var(--font-sans) } h1,h2,h3,h4,h5,h6{ font-family:var(--font-serif) } }

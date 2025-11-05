@@ -1,0 +1,34 @@
+---
+const user = { name: "Jean Dupont", avatar: "https://i.pravatar.cc/64?u=jd" }; // remplace par ton image PB
+---
+<header class="border-b bg-base-100">
+  <nav class="navbar max-w-7xl mx-auto px-4">
+    <div class="navbar-start">
+      <a href="/" class="btn btn-ghost px-0 normal-case text-2xl font-['Playfair Display'] text-primary">TaVue</a>
+    </div>
+
+    <div class="navbar-center hidden md:flex">
+      <ul class="menu menu-horizontal gap-2">
+        <li><a href="/configurateur" class="font-medium">Configurateur</a></li>
+        <li><a href="/mes-modeles" class="font-medium">Ma Collection</a></li>
+        <li><a href="/histoire" class="font-medium">Notre Histoire</a></li>
+      </ul>
+    </div>
+
+    <div class="navbar-end gap-2">
+      <a href="/login" class="btn btn-ghost hidden sm:inline-flex">Compte</a>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+          <div class="w-9 rounded-full border">
+            <img alt={user.name} src={user.avatar} loading="lazy" />
+          </div>
+        </div>
+        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+          <li class="menu-title">{user.name}</li>
+          <li><a href="/mes-modeles">Mes modèles</a></li>
+          <li><a href="/login">Se connecter</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
