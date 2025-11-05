@@ -2,20 +2,111 @@
 import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-const { title = "TaVue — Lunettes personnalisées", description = "" } = Astro.props;
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = "TaVue — Lunettes personnalisées fabriquées en France", 
+  description = "Créez vos lunettes sur mesure avec notre configurateur 3D. Matériaux nobles, fabrication artisanale française, livraison en 48h." 
+} = Astro.props;
 ---
+
+<!doctype html>
 <html lang="fr" data-theme="lunettes">
   <head>
-    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title><meta name="description" content={description} />
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet" />
+    <!-- Meta essentiels -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- SEO -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    
+    <!-- Fonts Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link 
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" 
+      rel="stylesheet" 
+    />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    
+    <!-- Theme color -->
+    <meta name="theme-color" content="#2C3E50" />
   </head>
-  <body class="min-h-screen bg-base-100 text-neutral">
+  
+  <body class="min-h-screen bg-white text-gray-900 antialiased">
+    <!-- Header sticky -->
     <Header />
-    <main class="max-w-7xl mx-auto px-4 py-10">
+    
+    <!-- Main content -->
+    <main class="py-8 md:py-12">
       <slot />
     </main>
+    
+    <!-- Footer -->
     <Footer />
+    
+    <!-- Scripts globaux (analytics, etc.) -->
+    <script>
+      // Animation au scroll (fade-in)
+      if (typeof IntersectionObserver !== 'undefined') {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('fade-in');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.card, .btn-lg').forEach(el => {
+          observer.observe(el);
+        });
+      }
+    </script>
   </body>
 </html>
+
+<style is:global>
+  /* Smooth scroll */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+</style>

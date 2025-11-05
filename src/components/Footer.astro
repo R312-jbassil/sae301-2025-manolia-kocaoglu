@@ -1,58 +1,118 @@
-<footer class="mt-20 border-t bg-base-100">
-    <div class="max-w-7xl mx-auto px-4 py-16 grid lg:grid-cols-4 gap-10">
-      <div>
-        <div class="text-2xl font-['Playfair Display'] text-primary">TaVue</div>
-        <p class="mt-3 text-sm opacity-70">
-          L’excellence de la lunetterie française. Créez des montures élégantes, raffinées et parfaitement adaptées.
+---
+const currentYear = new Date().getFullYear();
+
+const footerSections = {
+  boutique: {
+    title: "Boutique",
+    links: [
+      { href: "/configurateur", label: "Configurateur" },
+      { href: "/collections", label: "Collections" },
+      { href: "/nouveautes", label: "Nouveautés" },
+      { href: "/promos", label: "Promotions" }
+    ]
+  },
+  service: {
+    title: "Service Client",
+    links: [
+      { href: "/contact", label: "Nous contacter" },
+      { href: "/faq", label: "FAQ" },
+      { href: "/livraison", label: "Livraison & Retours" },
+      { href: "/garantie", label: "Garantie" }
+    ]
+  },
+  apropos: {
+    title: "À Propos",
+    links: [
+      { href: "/histoire", label: "Notre Histoire" },
+      { href: "/artisans", label: "Nos Artisans" },
+      { href: "/engagement", label: "Nos Engagements" },
+      { href: "/presse", label: "Presse" }
+    ]
+  }
+};
+
+const socialLinks = [
+  { href: "#", label: "Instagram", icon: "instagram" },
+  { href: "#", label: "Facebook", icon: "facebook" },
+  { href: "#", label: "Twitter", icon: "twitter" },
+  { href: "#", label: "LinkedIn", icon: "linkedin" }
+];
+---
+
+<footer class="bg-[#2C3E50] text-white mt-20">
+  <!-- Contenu principal -->
+  <div class="max-w-7xl mx-auto px-6 py-16">
+    <div class="grid lg:grid-cols-4 gap-12">
+      
+      <!-- Colonne marque -->
+      <div class="lg:col-span-1">
+        <div class="flex items-center gap-2 text-2xl font-serif font-semibold mb-4">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          TaVue
+        </div>
+        <p class="text-sm text-gray-300 leading-relaxed mb-6">
+          L'excellence de la lunetterie française. Créez des montures élégantes, raffinées et parfaitement adaptées à votre style.
         </p>
-        <div class="mt-4 flex gap-3">
-          <a class="btn btn-sm btn-ghost" aria-label="Instagram">IG</a>
-          <a class="btn btn-sm btn-ghost" aria-label="X">X</a>
-          <a class="btn btn-sm btn-ghost" aria-label="LinkedIn">in</a>
+        
+        <!-- Réseaux sociaux -->
+        <div class="flex gap-3">
+          {socialLinks.map(social => (
+            <a 
+              href={social.href}
+              aria-label={social.label}
+              class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              <span class="text-xs font-semibold">{social.icon.slice(0, 2).toUpperCase()}</span>
+            </a>
+          ))}
         </div>
       </div>
-  
-      <div>
-        <h4 class="font-semibold mb-3">Boutique</h4>
-        <ul class="space-y-2 text-sm">
-          <li><a href="/configurateur" class="link">Configurateur</a></li>
-          <li><a href="/collections" class="link">Collections</a></li>
-          <li><a href="/nouveautes" class="link">Nouveautés</a></li>
-          <li><a href="/promos" class="link">Promos</a></li>
-          <li><a href="/cartes" class="link">Cartes cadeaux</a></li>
-        </ul>
-      </div>
-  
-      <div>
-        <h4 class="font-semibold mb-3">Service Client</h4>
-        <ul class="space-y-2 text-sm">
-          <li><a href="/contact" class="link">Nous contacter</a></li>
-          <li><a href="/faq" class="link">FAQ</a></li>
-          <li><a href="/tailles" class="link">Guide des tailles</a></li>
-          <li><a href="/livraison" class="link">Livraison</a></li>
-          <li><a href="/retours" class="link">Retours & Échanges</a></li>
-          <li><a href="/garantie" class="link">Garantie</a></li>
-        </ul>
-      </div>
-  
-      <div>
-        <h4 class="font-semibold mb-3">Restez informé</h4>
-        <p class="text-sm opacity-70">Inscrivez-vous à notre newsletter pour nos nouveautés et offres exclusives.</p>
-        <form class="join mt-3">
-          <input type="email" placeholder="Votre adresse email" class="input input-bordered join-item w-full" required />
-          <button class="btn btn-primary join-item">S’inscrire</button>
-        </form>
+
+      <!-- Colonnes de liens -->
+      {Object.values(footerSections).map(section => (
+        <div>
+          <h4 class="font-semibold text-base mb-4">{section.title}</h4>
+          <ul class="space-y-3">
+            {section.links.map(link => (
+              <li>
+                <a 
+                  href={link.href}
+                  class="text-sm text-gray-300 hover:text-white transition-colors inline-block"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Barre inférieure -->
+  <div class="border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+        <div class="flex flex-wrap items-center gap-4">
+          <span>© {currentYear} TaVue. Tous droits réservés.</span>
+          <span class="hidden md:inline">•</span>
+          <span class="flex items-center gap-1.5">
+            Fabriqué en France 
+            <span class="text-base">🇫🇷</span>
+          </span>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-4">
+          <a href="/mentions-legales" class="hover:text-white transition-colors">Mentions légales</a>
+          <span>•</span>
+          <a href="/confidentialite" class="hover:text-white transition-colors">Confidentialité</a>
+          <span>•</span>
+          <a href="/cgv" class="hover:text-white transition-colors">CGV</a>
+        </div>
       </div>
     </div>
-    <div class="border-t">
-      <div class="max-w-7xl mx-auto px-4 py-6 text-xs opacity-70 flex flex-wrap items-center gap-3">
-        <span>© {new Date().getFullYear()} TaVue. Tous droits réservés. Fabriqué en France 🇫🇷</span>
-        <span class="hidden sm:inline">•</span>
-        <a class="link">Mentions légales</a>
-        <a class="link">Politique de confidentialité</a>
-        <a class="link">CGV</a>
-        <a class="link">Cookies</a>
-      </div>
-    </div>
-  </footer>
-  
+  </div>
+</footer>

@@ -2,175 +2,391 @@
 import LayoutTaVue from "../layouts/LayoutTaVue.astro";
 import svgRaw from "@/assets/lunettes.svg?raw";
 ---
+
 <LayoutTaVue title="Configurateur — TaVue">
-  <div class="grid lg:grid-cols-[1fr_420px] gap-8 items-start">
-    <!-- PREVIEW -->
-    <section class="card bg-base-100 border shadow-xl">
-      <div class="card-body">
-        <div class="flex items-center justify-between">
-          <h2 class="card-title">Prévisualisation en temps réel</h2>
-          <div class="tabs tabs-boxed">
-            <a class="tab tab-active">Face</a>
-            <a class="tab">Profil</a>
-            <a class="tab">3/4</a>
-          </div>
-        </div>
-        <div class="aspect-[4/3] rounded-box bg-base-200 grid place-items-center">
-          <div id="svg-host" class="w-[90%] h-[90%]"></div>
-        </div>
-        <div class="mt-4 flex items-center justify-between">
-          <div>
-            <div class="opacity-70 text-sm">Modèle</div>
-            <div class="text-xl font-semibold" id="model-name">TaVue Classic</div>
-          </div>
-          <div class="text-2xl font-semibold"><span id="price">289</span> €</div>
-        </div>
-      </div>
-    </section>
+  <div class="max-w-7xl mx-auto">
+    <!-- En-tête de page -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-serif font-semibold text-gray-900 mb-2">
+        Configurateur de lunettes
+      </h1>
+      <p class="text-gray-600">
+        Personnalisez votre monture en temps réel
+      </p>
+    </div>
 
-    <!-- OPTIONS PANEL -->
-    <aside class="card bg-base-100 border shadow-xl max-h-[calc(100vh-200px)]">
-      <div class="card-body overflow-y-auto space-y-6">
+    <!-- Layout principal -->
+    <div class="grid lg:grid-cols-[1fr_400px] gap-8">
+      
+      <!-- COLONNE GAUCHE : Prévisualisation -->
+      <section class="space-y-6">
+        
+        <!-- Card de prévisualisation -->
+        <div class="card">
+          <div class="card-body p-6">
+            <!-- Tabs de vue -->
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-semibold text-gray-900">Prévisualisation</h2>
+              <div class="tabs tabs-boxed">
+                <a class="tab tab-active tab-sm">Face</a>
+                <a class="tab tab-sm">Profil</a>
+                <a class="tab tab-sm">3/4</a>
+              </div>
+            </div>
 
-        <!-- Matériau monture -->
-        <div>
-          <h3 class="font-semibold mb-2">Matériau de la monture</h3>
-          <div id="mat-monture" class="grid grid-cols-2 gap-2"></div>
-        </div>
+            <!-- Zone SVG -->
+            <div class="aspect-[4/3] rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
+              <div id="svg-host" class="w-full h-full flex items-center justify-center"></div>
+            </div>
 
-        <!-- Couleur monture -->
-        <div>
-          <h3 class="font-semibold mb-2">Couleur de la monture</h3>
-          <div id="col-monture" class="flex flex-wrap gap-2"></div>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Matériau branches -->
-        <div>
-          <h3 class="font-semibold mb-2">Matériau des branches</h3>
-          <div id="mat-branches" class="grid grid-cols-2 gap-2"></div>
-        </div>
-
-        <!-- Couleur branches -->
-        <div>
-          <h3 class="font-semibold mb-2">Couleur des branches</h3>
-          <div id="col-branches" class="flex flex-wrap gap-2"></div>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Dimensions -->
-        <div>
-          <label class="form-control">
-            <div class="label"><span class="label-text">Largeur du pont: <span id="val-pont">18</span> mm</span></div>
-            <input id="pont" type="range" min="14" max="22" value="18" class="range" />
-          </label>
-        </div>
-        <div>
-          <label class="form-control">
-            <div class="label"><span class="label-text">Taille des verres: <span id="val-verres">52</span> mm</span></div>
-            <input id="verres" type="range" min="48" max="58" value="52" class="range" />
-          </label>
-        </div>
-
-        <!-- IA card -->
-        <div class="card bg-base-200">
-          <div class="card-body gap-3">
-            <h4 class="font-semibold">Génération par Intelligence Artificielle</h4>
-            <p class="text-sm opacity-70">Décrivez vos préférences (bureau, soirée, vélo…)</p>
-            <textarea class="textarea textarea-bordered" placeholder="Ex : une monture élégante pour le bureau, avec des tons chauds"></textarea>
-            <button class="btn btn-outline btn-primary">Générer avec l’IA</button>
-          </div>
-        </div>
-
-        <!-- Résumé -->
-        <div class="card bg-base-100 border">
-          <div class="card-body gap-2">
-            <h4 class="font-semibold">Résumé de votre configuration</h4>
-            <ul class="text-sm opacity-80 space-y-1">
-              <li>Matériau monture : <span id="sum-monture">Acétate</span></li>
-              <li>Matériau branches : <span id="sum-branches">Acétate</span></li>
-              <li>Largeur du pont : <span id="sum-pont">18</span> mm</li>
-              <li>Taille des verres : <span id="sum-verres">52</span> mm</li>
-            </ul>
-            <div class="flex items-center justify-between pt-2">
-              <div class="text-xl font-semibold"><span id="price-2">289</span> €</div>
-              <div class="join">
-                <button id="save" class="btn btn-outline join-item">Sauvegarder</button>
-                <a href="/commande" class="btn btn-primary join-item">Commander</a>
+            <!-- Info modèle et prix -->
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200 mt-6">
+              <div>
+                <div class="text-sm text-gray-500 mb-1">Modèle</div>
+                <div class="text-xl font-semibold text-gray-900" id="model-name">
+                  TaVue Classic
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-3xl font-bold text-gray-900">
+                  <span id="price">289</span> €
+                </div>
+                <div class="text-sm text-gray-500">TTC</div>
               </div>
             </div>
           </div>
         </div>
 
-      </div>
-    </aside>
+        <!-- Card résumé de configuration -->
+        <div class="card">
+          <div class="card-body p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              Résumé de votre configuration
+            </h3>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Matériau monture :</span>
+                <span class="font-medium text-gray-900" id="sum-monture">Acétate</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Couleur monture :</span>
+                <span class="font-medium text-gray-900" id="sum-col-monture">Noir</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Matériau branches :</span>
+                <span class="font-medium text-gray-900" id="sum-branches">Acétate</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Couleur branches :</span>
+                <span class="font-medium text-gray-900" id="sum-col-branches">Marron</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Largeur du pont :</span>
+                <span class="font-medium text-gray-900"><span id="sum-pont">18</span> mm</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Taille des verres :</span>
+                <span class="font-medium text-gray-900"><span id="sum-verres">52</span> mm</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="pt-6 mt-6 border-t border-gray-200">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <div class="text-sm text-gray-500">Prix total</div>
+                  <div class="text-2xl font-bold text-gray-900">
+                    <span id="price-2">289</span> €
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <button id="save" class="btn btn-outline btn-block">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Sauvegarder
+                </button>
+                <a href="/commande" class="btn btn-primary btn-block">
+                  Commander
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- COLONNE DROITE : Options -->
+      <aside class="space-y-6">
+        
+        <!-- Options de personnalisation -->
+        <div class="card sticky top-20">
+          <div class="card-body p-6 max-h-[calc(100vh-120px)] overflow-y-auto">
+            <h2 class="text-lg font-semibold text-gray-900 mb-6">
+              Options de personnalisation
+            </h2>
+
+            <!-- Matériau monture -->
+            <div class="mb-8">
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Matériau de la monture
+              </label>
+              <div id="mat-monture" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <!-- Couleur monture -->
+            <div class="mb-8">
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Couleur de la monture
+              </label>
+              <div id="col-monture" class="flex flex-wrap gap-3"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Matériau branches -->
+            <div class="mb-8">
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Matériau des branches
+              </label>
+              <div id="mat-branches" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <!-- Couleur branches -->
+            <div class="mb-8">
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Couleur des branches
+              </label>
+              <div id="col-branches" class="flex flex-wrap gap-3"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Dimensions -->
+            <div class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                  Largeur du pont : <span id="val-pont" class="text-[#2C3E50]">18</span> mm
+                </label>
+                <input 
+                  id="pont" 
+                  type="range" 
+                  min="14" 
+                  max="22" 
+                  value="18" 
+                  class="range range-sm w-full"
+                />
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>14 mm</span>
+                  <span>22 mm</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                  Taille des verres : <span id="val-verres" class="text-[#2C3E50]">52</span> mm
+                </label>
+                <input 
+                  id="verres" 
+                  type="range" 
+                  min="48" 
+                  max="58" 
+                  value="52" 
+                  class="range range-sm w-full"
+                />
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>48 mm</span>
+                  <span>58 mm</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- IA Generation -->
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-5 border border-gray-200">
+              <div class="flex items-start gap-3 mb-4">
+                <div class="p-2 bg-[#2C3E50] rounded-lg">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-semibold text-gray-900 text-sm mb-1">
+                    Génération par IA
+                  </h4>
+                  <p class="text-xs text-gray-600">
+                    Décrivez vos préférences et laissez l'IA créer votre monture idéale
+                  </p>
+                </div>
+              </div>
+              <textarea 
+                class="textarea textarea-bordered w-full text-sm mb-3" 
+                placeholder="Ex : une monture élégante pour le bureau, avec des tons chauds..."
+                rows="3"
+              ></textarea>
+              <button class="btn btn-sm btn-primary btn-block">
+                Générer avec l'IA
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </aside>
+    </div>
   </div>
 
-  <!-- JS vanilla (couleurs/matériaux/prix) -->
-  <script type="module">
-    const COLORS = ["#2C3E50","#8B7355","#C9A885","#111827","#ffffff","#b91c1c","#065f46","#1e3a8a"];
-    const MATS = ["Acétate","Métal","Titane","Bois"];
-    const SURCHARGES = { "Acétate": {m:0,b:0}, "Métal": {m:30,b:20}, "Titane": {m:60,b:40}, "Bois": {m:45,b:35} };
+  <!-- Script de configuration -->
+  <script type="module" define:vars={{ svgRaw }}>
+    const COLORS = [
+      { hex: "#2C3E50", name: "Bleu Marine" },
+      { hex: "#8B7355", name: "Marron Cognac" },
+      { hex: "#C9A885", name: "Beige Doré" },
+      { hex: "#1A1A1A", name: "Noir" },
+      { hex: "#FFFFFF", name: "Blanc" },
+      { hex: "#DC2626", name: "Rouge" },
+      { hex: "#059669", name: "Vert Sapin" },
+      { hex: "#1E3A8A", name: "Bleu Royal" }
+    ];
+
+    const MATS = ["Acétate", "Métal", "Titane", "Bois"];
+    
+    const SURCHARGES = {
+      "Acétate": { m: 0, b: 0 },
+      "Métal": { m: 30, b: 20 },
+      "Titane": { m: 60, b: 40 },
+      "Bois": { m: 45, b: 35 }
+    };
 
     const state = {
-      base: 289, matMonture: "Acétate", matBranches: "Acétate",
-      colMonture: COLORS[0], colBranches: COLORS[1],
-      largeurPont: 18, tailleVerres: 52,
+      base: 289,
+      matMonture: "Acétate",
+      matBranches: "Acétate",
+      colMonture: COLORS[0].hex,
+      colMontureNom: COLORS[0].name,
+      colBranches: COLORS[1].hex,
+      colBranchesNom: COLORS[1].name,
+      largeurPont: 18,
+      tailleVerres: 52,
       svg: `<?xml version="1.0"?>${svgRaw}`
     };
 
     const $ = (id) => document.getElementById(id);
-    function price(){ return state.base + (SURCHARGES[state.matMonture].m||0) + (SURCHARGES[state.matBranches].b||0); }
+    
+    function price() {
+      return state.base + 
+        (SURCHARGES[state.matMonture].m || 0) + 
+        (SURCHARGES[state.matBranches].b || 0);
+    }
 
-    function injectSVG(){
+    function injectSVG() {
       const host = $("svg-host");
       host.innerHTML = state.svg;
-      host.querySelectorAll("svg *").forEach(el => el.setAttribute("stroke", state.colMonture));
+      
+      // Applique les couleurs au SVG
+      const svg = host.querySelector("svg");
+      if (svg) {
+        svg.querySelectorAll("#monture *").forEach(el => {
+          el.setAttribute("fill", state.colMonture);
+          el.setAttribute("stroke", state.colMonture);
+        });
+        svg.querySelectorAll("#branches *").forEach(el => {
+          el.setAttribute("fill", state.colBranches);
+          el.setAttribute("stroke", state.colBranches);
+        });
+      }
     }
 
-    function renderChips(containerId, list, current, onPick){
-      const box = $(containerId); box.innerHTML = "";
-      list.forEach(v=>{
-        const b = document.createElement("button");
-        b.type="button"; b.className = "btn "+(current===v?"btn-primary":"btn-outline"); b.textContent=v;
-        b.onclick=()=>{ onPick(v); update(); }; box.appendChild(b);
+    function renderMaterialButtons(containerId, current, onPick) {
+      const box = $(containerId);
+      box.innerHTML = "";
+      MATS.forEach(mat => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `material-btn ${current === mat ? "active" : ""}`;
+        btn.textContent = mat;
+        btn.onclick = () => {
+          onPick(mat);
+          update();
+        };
+        box.appendChild(btn);
       });
     }
-    function renderDots(containerId, current, onPick, ring="ring ring-primary"){
-      const box=$(containerId); box.innerHTML="";
-      COLORS.forEach(c=>{
-        const b=document.createElement("button"); b.type="button";
-        b.className="w-7 h-7 rounded-full border"; b.style.background=c;
-        if(current===c) b.className+=" "+ring; b.onclick=()=>{ onPick(c); update(); };
-        box.appendChild(b);
+
+    function renderColorSwatches(containerId, current, onPick) {
+      const box = $(containerId);
+      box.innerHTML = "";
+      COLORS.forEach(color => {
+        const swatch = document.createElement("button");
+        swatch.type = "button";
+        swatch.className = `color-swatch ${current === color.hex ? "active" : ""}`;
+        swatch.style.backgroundColor = color.hex;
+        swatch.title = color.name;
+        if (color.hex === "#FFFFFF") {
+          swatch.style.border = "2px solid #E5E7EB";
+        }
+        swatch.onclick = () => {
+          onPick(color);
+          update();
+        };
+        box.appendChild(swatch);
       });
     }
-    function update(){
+
+    function update() {
       injectSVG();
-      renderChips("mat-monture", MATS, state.matMonture, (v)=>state.matMonture=v);
-      renderChips("mat-branches", MATS, state.matBranches, (v)=>state.matBranches=v);
-      renderDots("col-monture", state.colMonture, (v)=>state.colMonture=v, "ring ring-primary");
-      renderDots("col-branches", state.colBranches, (v)=>state.colBranches=v, "ring ring-secondary");
+      
+      // Materials
+      renderMaterialButtons("mat-monture", state.matMonture, (v) => state.matMonture = v);
+      renderMaterialButtons("mat-branches", state.matBranches, (v) => state.matBranches = v);
+      
+      // Colors
+      renderColorSwatches("col-monture", state.colMonture, (c) => {
+        state.colMonture = c.hex;
+        state.colMontureNom = c.name;
+      });
+      renderColorSwatches("col-branches", state.colBranches, (c) => {
+        state.colBranches = c.hex;
+        state.colBranchesNom = c.name;
+      });
+      
+      // Dimensions
       $("val-pont").textContent = String(state.largeurPont);
       $("val-verres").textContent = String(state.tailleVerres);
+      
+      // Summary
       $("sum-monture").textContent = state.matMonture;
+      $("sum-col-monture").textContent = state.colMontureNom;
       $("sum-branches").textContent = state.matBranches;
+      $("sum-col-branches").textContent = state.colBranchesNom;
       $("sum-pont").textContent = String(state.largeurPont);
       $("sum-verres").textContent = String(state.tailleVerres);
-      $("price").textContent = String(price());
-      $("price-2").textContent = String(price());
+      
+      // Price
+      const currentPrice = price();
+      $("price").textContent = String(currentPrice);
+      $("price-2").textContent = String(currentPrice);
     }
 
-    $("pont").addEventListener("input", e=>{ state.largeurPont=+e.target.value; update(); });
-    $("verres").addEventListener("input", e=>{ state.tailleVerres=+e.target.value; update(); });
-    $("save").addEventListener("click", async ()=>{
-      // TODO: branchement PB (fetch /api/saveSVG) si besoin
-      const ok = true;
-      if(ok) alert("Modèle sauvegardé");
+    // Event listeners
+    $("pont").addEventListener("input", (e) => {
+      state.largeurPont = +e.target.value;
+      update();
     });
 
+    $("verres").addEventListener("input", (e) => {
+      state.tailleVerres = +e.target.value;
+      update();
+    });
+
+    $("save").addEventListener("click", async () => {
+      // TODO: API call to save
+      alert("✓ Modèle sauvegardé dans votre collection");
+    });
+
+    // Initialize
     update();
   </script>
 </LayoutTaVue>

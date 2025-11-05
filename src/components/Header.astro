@@ -1,32 +1,82 @@
 ---
-const user = { name: "Jean Dupont", avatar: "https://i.pravatar.cc/64?u=jd" }; // remplace par ton image PB
+const user = { 
+  name: "Jean Dupont", 
+  avatar: "https://i.pravatar.cc/64?u=jd" 
+};
+
+const navItems = [
+  { href: "/configurateur", label: "Configurateur" },
+  { href: "/mes-modeles", label: "Ma Collection" },
+  { href: "/histoire", label: "Notre Histoire" }
+];
 ---
-<header class="border-b bg-base-100">
-  <nav class="navbar max-w-7xl mx-auto px-4">
+
+<header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+  <nav class="navbar max-w-7xl mx-auto px-6 h-16">
+    <!-- Logo -->
     <div class="navbar-start">
-      <a href="/" class="btn btn-ghost px-0 normal-case text-2xl font-['Playfair Display'] text-primary">TaVue</a>
+      <a href="/" class="flex items-center gap-2 text-2xl font-serif font-semibold text-[#2C3E50] hover:opacity-80 transition-opacity">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        TaVue
+      </a>
     </div>
 
-    <div class="navbar-center hidden md:flex">
-      <ul class="menu menu-horizontal gap-2">
-        <li><a href="/configurateur" class="font-medium">Configurateur</a></li>
-        <li><a href="/mes-modeles" class="font-medium">Ma Collection</a></li>
-        <li><a href="/histoire" class="font-medium">Notre Histoire</a></li>
+    <!-- Navigation centrale -->
+    <div class="navbar-center hidden lg:flex">
+      <ul class="menu menu-horizontal gap-1 px-1">
+        {navItems.map(item => (
+          <li>
+            <a 
+              href={item.href} 
+              class="text-sm font-medium text-gray-700 hover:text-[#2C3E50] hover:bg-gray-100 rounded-md px-4 py-2 transition-all"
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
       </ul>
     </div>
 
-    <div class="navbar-end gap-2">
-      <a href="/login" class="btn btn-ghost hidden sm:inline-flex">Compte</a>
+    <!-- Actions droite -->
+    <div class="navbar-end gap-3">
+      <!-- Bouton mobile menu -->
+      <div class="dropdown dropdown-end lg:hidden">
+        <label tabindex="0" class="btn btn-ghost btn-circle">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </label>
+        <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-52 mt-3 border border-gray-200">
+          {navItems.map(item => (
+            <li><a href={item.href} class="text-sm">{item.label}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Avatar utilisateur -->
       <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-          <div class="w-9 rounded-full border">
-            <img alt={user.name} src={user.avatar} loading="lazy" />
+        <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+          <div class="w-9 h-9 rounded-full ring-2 ring-gray-200 ring-offset-2">
+            <img 
+              alt={user.name} 
+              src={user.avatar} 
+              loading="lazy"
+              class="rounded-full object-cover"
+            />
           </div>
-        </div>
-        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-          <li class="menu-title">{user.name}</li>
-          <li><a href="/mes-modeles">Mes modèles</a></li>
-          <li><a href="/login">Se connecter</a></li>
+        </label>
+        <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-56 mt-3 border border-gray-200">
+          <li class="menu-title px-4 py-2">
+            <span class="text-sm font-semibold text-gray-900">{user.name}</span>
+          </li>
+          <div class="divider my-1"></div>
+          <li><a href="/mes-modeles" class="text-sm">Mes modèles</a></li>
+          <li><a href="/configurateur" class="text-sm">Configurateur</a></li>
+          <div class="divider my-1"></div>
+          <li><a href="/login" class="text-sm text-[#2C3E50]">Se connecter</a></li>
         </ul>
       </div>
     </div>

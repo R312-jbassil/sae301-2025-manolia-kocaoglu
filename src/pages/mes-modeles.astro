@@ -1,16 +1,242 @@
 ---
 import LayoutTaVue from "../layouts/LayoutTaVue.astro";
+import svgRaw from "@/assets/lunettes.svg?raw";
+
+// TODO: Récupérer les modèles depuis PocketBase
+const modeles = [
+  {
+    id: "1",
+    nom: "TaVue Classic",
+    prix: 289,
+    matMonture: "Acétate",
+    colMonture: "Noir",
+    matBranches: "Acétate",
+    colBranches: "Marron",
+    dateCreation: "2024-03-15"
+  },
+  {
+    id: "2",
+    nom: "TaVue Sport",
+    prix: 319,
+    matMonture: "Titane",
+    colMonture: "Bleu Marine",
+    matBranches: "Métal",
+    colBranches: "Argenté",
+    dateCreation: "2024-03-10"
+  },
+  {
+    id: "3",
+    nom: "TaVue Élégance",
+    prix: 339,
+    matMonture: "Acétate",
+    colMonture: "Beige Doré",
+    matBranches: "Bois",
+    colBranches: "Noyer",
+    dateCreation: "2024-03-05"
+  }
+];
 ---
+
 <LayoutTaVue title="Ma Collection — TaVue">
-  <h1 class="text-3xl font-['Playfair Display'] text-primary mb-6">Mes modèles</h1>
-  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    <a class="card bg-base-100 border shadow">
-      <figure class="aspect-[4/3] bg-base-200 grid place-items-center text-neutral/50">SVG</figure>
-      <div class="card-body">
-        <h2 class="card-title">TaVue Classic</h2>
-        <p class="opacity-70">289 €</p>
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- En-tête -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-serif font-semibold text-gray-900 mb-2">
+          Ma Collection
+        </h1>
+        <p class="text-gray-600">
+          Retrouvez tous vos modèles personnalisés
+        </p>
       </div>
-    </a>
-    <!-- boucle PB ici plus tard -->
+      <a href="/configurateur" class="btn btn-primary">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouveau modèle
+      </a>
+    </div>
+
+    <!-- Filtres et tri -->
+    <div class="card bg-white border border-gray-200 mb-8">
+      <div class="card-body p-6">
+        <div class="flex flex-wrap items-center gap-4">
+          
+          <!-- Recherche -->
+          <div class="flex-1 min-w-[250px]">
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <input 
+                type="search" 
+                placeholder="Rechercher un modèle..." 
+                class="input input-bordered w-full pl-10"
+              />
+            </div>
+          </div>
+
+          <!-- Filtres -->
+          <div class="flex flex-wrap gap-2">
+            <select class="select select-bordered select-sm">
+              <option>Tous les matériaux</option>
+              <option>Acétate</option>
+              <option>Métal</option>
+              <option>Titane</option>
+              <option>Bois</option>
+            </select>
+
+            <select class="select select-bordered select-sm">
+              <option>Trier par : Plus récent</option>
+              <option>Plus ancien</option>
+              <option>Prix croissant</option>
+              <option>Prix décroissant</option>
+              <option>Nom A-Z</option>
+            </select>
+          </div>
+
+          <!-- Vue -->
+          <div class="tabs tabs-boxed">
+            <a class="tab tab-active tab-sm">Grille</a>
+            <a class="tab tab-sm">Liste</a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille de modèles -->
+    {modeles.length > 0 ? (
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {modeles.map(modele => (
+          <div class="card bg-white border border-gray-200 shadow-sm hover:shadow-lg transition-shadow group">
+            
+            <!-- Image/SVG -->
+            <figure class="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 p-8 relative overflow-hidden">
+              <div class="w-full h-full flex items-center justify-center" set:html={svgRaw}></div>
+              
+              <!-- Actions rapides (hover) -->
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                <a 
+                  href={`/configurateur?load=${modele.id}`}
+                  class="btn btn-sm btn-primary"
+                  title="Modifier"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                  </svg>
+                </a>
+                <a 
+                  href={`/produit/${modele.id}`}
+                  class="btn btn-sm btn-ghost bg-white"
+                  title="Voir"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </a>
+              </div>
+            </figure>
+
+            <!-- Contenu -->
+            <div class="card-body p-5">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex-1">
+                  <h3 class="card-title text-lg text-gray-900 mb-1">
+                    {modele.nom}
+                  </h3>
+                  <p class="text-sm text-gray-500">
+                    Créé le {new Date(modele.dateCreation).toLocaleDateString('fr-FR', { 
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })}
+                  </p>
+                </div>
+                
+                <!-- Menu dropdown -->
+                <div class="dropdown dropdown-end">
+                  <label tabindex="0" class="btn btn-ghost btn-sm btn-circle">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                    </svg>
+                  </label>
+                  <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-48 border border-gray-200">
+                    <li><a href={`/configurateur?load=${modele.id}`} class="text-sm">Modifier</a></li>
+                    <li><a href={`/configurateur?duplicate=${modele.id}`} class="text-sm">Dupliquer</a></li>
+                    <li><a class="text-sm">Partager</a></li>
+                    <div class="divider my-1"></div>
+                    <li><a class="text-sm text-red-600">Supprimer</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Caractéristiques -->
+              <div class="space-y-2 mb-4">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Monture :</span>
+                  <span class="font-medium text-gray-900">{modele.matMonture} {modele.colMonture}</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Branches :</span>
+                  <span class="font-medium text-gray-900">{modele.matBranches} {modele.colBranches}</span>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="card-actions flex items-center justify-between pt-4 border-t border-gray-200">
+                <div class="text-2xl font-bold text-gray-900">
+                  {modele.prix} €
+                </div>
+                <a href={`/commande?modele=${modele.id}`} class="btn btn-primary btn-sm">
+                  Commander
+                </a>
+              </div>
+            </div>
+
+          </div>
+        ))}
+      </div>
+    ) : (
+      <!-- État vide -->
+      <div class="card bg-white border border-gray-200">
+        <div class="card-body p-12 text-center">
+          <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">
+            Aucun modèle pour le moment
+          </h3>
+          <p class="text-gray-600 mb-6 max-w-md mx-auto">
+            Commencez à créer votre première paire de lunettes personnalisée avec notre configurateur.
+          </p>
+          <a href="/configurateur" class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Créer mon premier modèle
+          </a>
+        </div>
+      </div>
+    )}
+
+    <!-- Pagination (si nécessaire) -->
+    {modeles.length > 0 && (
+      <div class="flex justify-center mt-8">
+        <div class="join">
+          <button class="join-item btn btn-sm">«</button>
+          <button class="join-item btn btn-sm btn-active">1</button>
+          <button class="join-item btn btn-sm">2</button>
+          <button class="join-item btn btn-sm">3</button>
+          <button class="join-item btn btn-sm">»</button>
+        </div>
+      </div>
+    )}
+
   </div>
 </LayoutTaVue>
