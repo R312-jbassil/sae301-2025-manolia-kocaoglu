@@ -1,0 +1,37 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import pb from "../lib/pb";
+
+let items:any[] = [];
+try {
+  // Charge l'auth côté serveur depuis cookie de la requête entrante
+  const cookie = Astro.request.headers.get("cookie") || "";
+  try { pb.authStore.loadFromCookie(cookie); } catch {}
+  const u = pb.authStore.model;
+  if (u?.id) {
+    // Si ta relation `id_utilisateur` == users.id :
+    items = await pb.collection("lunettes").getFullList({
+      filter: `id_utilisateur="${u.id}"`,
+      sort: "-created"
+    });
+  }
+} catch (e) { console.error(e); }
+---
+<BaseLayout title="Ma Collection — TaVue">
+  <h1 class="text-3xl font-['Playfair Display'] text-primary mb-6">Mes modèles</h1>
+  {items.length === 0 ? (
+    <div class="alert"><span>Aucun modèle enregistré pour l’instant.</span></div>
+  ) : (
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {items.map((p) => (
+        <a href={`/produit/${p.id}`} class="card bg-base-100 border shadow">
+          <figure class="aspect-[4/3] bg-base-200 text-neutral/50 grid place-items-center">SVG</figure>
+          <div class="card-body">
+            <h2 class="card-title">{p.nom_modele ?? "Modèle"}</h2>
+            <p class="opacity-70">{p.prix_total ? p.prix_total + " €" : ""}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+  )}
+</BaseLayout>

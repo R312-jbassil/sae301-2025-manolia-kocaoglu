@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import pb from "../lib/pb";
+
+let error = "";
+if (Astro.request.method === "POST") {
+  const data = await Astro.request.formData();
+  const email = String(data.get("email")||"");
+  const password = String(data.get("password")||"");
+  const action = String(data.get("action")||"login");
+  try {
+    if (action === "signup") {
+      await pb.collection("users").create({ email, password, passwordConfirm: password, name: "" });
+    }
+    await pb.collection("users").authWithPassword(email, password);
+    // renvoie un cookie côté client automatiquement (le SDK l'a en mémoire ici côté serveur;
+    // tu peux aussi gérer un Set-Cookie custom si besoin)
+    return Astro.redirect("/mes-modeles");
+  } catch (e:any) { error = e?.message ?? "Erreur d'authentification"; }
+}
+---
+<BaseLayout title="Compte — TaVue">
+  <form method="post" class="card max-w-md mx-auto bg-base-100 border">
+    <div class="card-body">
+      <h1 class="card-title">Se connecter</h1>
+      {error && <div class="alert alert-error text-sm">{error}</div>}
+      <label class="form-control w-full">
+        <div class="label"><span class="label-text">Email</span></div>
+        <input name="email" type="email" required class="input input-bordered w-full" />
+      </label>
+      <label class="form-control w-full">
+        <div class="label"><span class="label-text">Mot de passe</span></div>
+        <input name="password" type="password" required class="input input-bordered w-full" />
+      </label>
+      <div class="card-actions justify-end mt-2">
+        <button name="action" value="login" class="btn btn-primary">Connexion</button>
+        <button name="action" value="signup" class="btn btn-outline">Créer un compte</button>
+      </div>
+    </div>
+  </form>
+</BaseLayout>

@@ -1,0 +1,211 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import svgRaw from "../../assets/lunettes.svg?raw"; // import du SVG en texte
+---
+
+<BaseLayout title="Configurateur — TaVue">
+  <div class="grid lg:grid-cols-[1fr_420px] gap-8">
+    <!-- PREVIEW -->
+    <section class="card bg-base-100 border">
+      <div class="card-body">
+        <h2 class="card-title">Prévisualisation en temps réel</h2>
+        <div class="aspect-[4/3] rounded-box bg-base-200 grid place-items-center">
+          <div id="svg-host" class="w-[90%] h-[90%]"></div>
+        </div>
+        <div class="flex items-center justify-between mt-4">
+          <div>
+            <div class="opacity-70 text-sm" id="model-name">TaVue Classic</div>
+            <div class="text-xl font-semibold"><span id="price">289</span> €</div>
+          </div>
+          <label class="input input-bordered flex items-center gap-2 w-28">
+            <span class="opacity-70">Qté</span>
+            <input id="qty" type="number" min="1" value="1" class="grow text-right" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- OPTIONS -->
+    <aside class="card bg-base-100 border max-h-[calc(100vh-180px)]">
+      <div class="card-body overflow-y-auto">
+        <h3 class="card-title">Options</h3>
+
+        <!-- Matériau monture -->
+        <div class="form-control">
+          <label class="label"><span class="label-text">Matériau de la monture</span></label>
+          <div id="mat-monture" class="grid grid-cols-2 gap-2">
+            <!-- boutons générés en JS -->
+          </div>
+        </div>
+
+        <!-- Matériau branches -->
+        <div class="form-control">
+          <label class="label"><span class="label-text">Matériau des branches</span></label>
+          <div id="mat-branches" class="grid grid-cols-2 gap-2">
+            <!-- boutons générés en JS -->
+          </div>
+        </div>
+
+        <!-- Couleur monture -->
+        <div class="form-control">
+          <label class="label"><span class="label-text">Couleur monture</span></label>
+          <div id="col-monture" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Couleur branches -->
+        <div class="form-control">
+          <label class="label"><span class="label-text">Couleur branches</span></label>
+          <div id="col-branches" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Dimensions -->
+        <label class="form-control">
+          <div class="label"><span class="label-text">Largeur du pont: <span id="val-pont">18</span> mm</span></div>
+          <input id="pont" type="range" min="14" max="22" value="18" class="range" />
+        </label>
+
+        <label class="form-control">
+          <div class="label"><span class="label-text">Taille des verres: <span id="val-verres">52</span> mm</span></div>
+          <input id="verres" type="range" min="48" max="58" value="52" class="range" />
+        </label>
+
+        <!-- Sauvegarde -->
+        <div class="card bg-base-200 mt-2">
+          <div class="card-body items-start gap-3">
+            <div>
+              <div class="opacity-70 text-sm">TaVue Classic</div>
+              <div class="text-xl font-semibold"><span id="price-2">289</span> €</div>
+            </div>
+            <button id="save" class="btn btn-primary">Sauvegarder</button>
+            <div id="save-msg" class="text-sm opacity-70"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Script client pure vanilla -->
+  <script type="module">
+    // --- Constantes UI ---
+    const COLORS = ["#2C3E50","#8B7355","#C9A885","#111827","#ffffff","#b91c1c","#065f46","#1e3a8a"];
+    const MATS = ["Acétate","Métal","Titane","Bois"];
+    const SURCHARGES = { "Acétate": {m:0,b:0}, "Métal": {m:30,b:20}, "Titane": {m:60,b:40}, "Bois": {m:45,b:35} };
+
+    // --- Etat ---
+    const state = {
+      base: 289,
+      qty: 1,
+      nom: "TaVue Classic",
+      matMonture: "Acétate",
+      matBranches: "Acétate",
+      colMonture: COLORS[0],
+      colBranches: COLORS[1],
+      colVerres: "#e5e7eb",
+      largeurPont: 18,
+      tailleVerres: 52,
+      svg: `<?xml version="1.0"?>${svgRaw}`
+    };
+
+    // --- Helpers ---
+    const el = (sel) => document.querySelector(sel);
+    const byId = (id) => document.getElementById(id);
+
+    function computePrice() {
+      const add = (SURCHARGES[state.matMonture]?.m || 0) + (SURCHARGES[state.matBranches]?.b || 0);
+      return state.base + add;
+    }
+
+    function updatePriceUI() {
+      const p = computePrice() * Math.max(1, Number(state.qty)||1);
+      byId("price").textContent = String(computePrice());
+      byId("price-2").textContent = String(computePrice());
+    }
+
+    function renderColorDots(containerId, current, onPick, ringClass = "ring ring-primary") {
+      const box = byId(containerId);
+      box.innerHTML = "";
+      COLORS.forEach(c => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "w-8 h-8 rounded-full border";
+        btn.style.background = c;
+        if (current === c) btn.className += " " + ringClass;
+        btn.addEventListener("click", () => { onPick(c); render(); });
+        box.appendChild(btn);
+      });
+    }
+
+    function renderMatButtons(containerId, current, onPick) {
+      const box = byId(containerId);
+      box.innerHTML = "";
+      MATS.forEach(m => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = m;
+        b.className = "btn " + (current === m ? "btn-primary" : "btn-outline");
+        b.addEventListener("click", () => { onPick(m); render(); });
+        box.appendChild(b);
+      });
+    }
+
+    function injectSVG() {
+      const host = byId("svg-host");
+      host.innerHTML = state.svg;
+
+      // Coloration simple : appliquer la couleur de monture sur les traits
+      // (Si tu ajoutes des classes dans le SVG, on fera un mapping plus fin.)
+      host.querySelectorAll("svg *").forEach(el => {
+        el.setAttribute("stroke", state.colMonture);
+      });
+    }
+
+    function render() {
+      injectSVG();
+      renderMatButtons("mat-monture", state.matMonture, (m) => state.matMonture = m);
+      renderMatButtons("mat-branches", state.matBranches, (m) => state.matBranches = m);
+      renderColorDots("col-monture", state.colMonture, (c) => state.colMonture = c, "ring ring-primary");
+      renderColorDots("col-branches", state.colBranches, (c) => state.colBranches = c, "ring ring-secondary");
+      byId("val-pont").textContent = String(state.largeurPont);
+      byId("val-verres").textContent = String(state.tailleVerres);
+      byId("model-name").textContent = state.nom;
+      updatePriceUI();
+    }
+
+    // --- Listeners de base ---
+    byId("qty").addEventListener("input", (e) => { state.qty = Math.max(1, Number(e.target.value)||1); updatePriceUI(); });
+    byId("pont").addEventListener("input", (e) => { state.largeurPont = Number(e.target.value); byId("val-pont").textContent = e.target.value; });
+    byId("verres").addEventListener("input", (e) => { state.tailleVerres = Number(e.target.value); byId("val-verres").textContent = e.target.value; });
+
+    byId("save").addEventListener("click", async () => {
+      byId("save-msg").textContent = "Enregistrement…";
+      const payload = {
+        nom_modele: state.nom,
+        svg_code: state.svg, // tu peux stocker le SVG final ici (ou une version paramétrée)
+        couleur_monture: state.colMonture,
+        couleur_branches: state.colBranches,
+        couleur_verres: state.colVerres,
+        largeur_pont: state.largeurPont,
+        taille_verres: state.tailleVerres,
+        prix_total: computePrice()
+        // id_utilisateur sera ajouté côté serveur si tu veux; sinon crée-le côté client et envoie-le.
+      };
+      try {
+        const res = await fetch("/api/saveSVG", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          byId("save-msg").textContent = "Modèle sauvegardé ✅";
+        } else {
+          byId("save-msg").textContent = "Erreur, es-tu connecté ?";
+        }
+      } catch (e) {
+        byId("save-msg").textContent = "Erreur réseau.";
+      }
+    });
+
+    // --- Init ---
+    render();
+  </script>
+</BaseLayout>

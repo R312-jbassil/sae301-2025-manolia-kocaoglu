@@ -1,11 +1,23 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-
-<Layout>
-	<Welcome />
-</Layout>
+<BaseLayout title="TaVue — Lunettes personnalisées">
+  <section class="grid lg:grid-cols-2 gap-10 items-center">
+    <div>
+      <h1 class="text-4xl md:text-5xl font-['Playfair Display'] text-primary">Lunettes françaises, sobrement élégantes</h1>
+      <p class="mt-4 opacity-80">Composez votre paire : matériaux, couleurs, dimensions — et enregistrez vos modèles.</p>
+      <div class="mt-8 flex gap-3">
+        <a href="/configurateur" class="btn btn-primary">Ouvrir le configurateur</a>
+        <a href="/mes-modeles" class="btn btn-outline">Voir mes modèles</a>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-xl border">
+      <div class="card-body">
+        <h2 class="card-title">Prévisualisation</h2>
+        <div class="aspect-[4/3] rounded-box bg-base-200 grid place-items-center text-neutral/50">
+          SVG
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

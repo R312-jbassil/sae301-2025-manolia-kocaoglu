@@ -9,6 +9,8 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.15.3"
+    "astro": "^5.15.3",
+    "daisyui": "^5.4.4",
+    "pocketbase": "^0.26.3"
   }
 }

@@ -1,0 +1,30 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import pb from "../../lib/pb";
+const { id } = Astro.params;
+
+let item:any=null;
+try {
+  const cookie = Astro.request.headers.get("cookie") || "";
+  try { pb.authStore.loadFromCookie(cookie); } catch {}
+  item = await pb.collection("lunettes").getOne(id!);
+} catch (e) { console.error(e); }
+---
+<BaseLayout title={item ? `${item.nom_modele} — TaVue` : "Produit — TaVue"}>
+  {item ? (
+    <article class="grid lg:grid-cols-2 gap-10">
+      <div class="card bg-base-100 border shadow">
+        <figure class="aspect-[4/3] bg-base-200 grid place-items-center">
+          <!-- si tu veux afficher le SVG enregistré : -->
+          {item.svg_code ? <div set:html={item.svg_code}></div> : "SVG"}
+        </figure>
+      </div>
+      <div class="space-y-4">
+        <h1 class="text-3xl font-['Playfair Display'] text-primary">{item.nom_modele}</h1>
+        <p class="opacity-80">Monture: {item.couleur_monture} — Branches: {item.couleur_branches}</p>
+        <div class="text-2xl font-semibold">{item.prix_total} €</div>
+        <button class="btn btn-primary">Ajouter au panier</button>
+      </div>
+    </article>
+  ) : <div class="alert alert-error">Introuvable.</div>}
+</BaseLayout>
