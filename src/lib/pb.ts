@@ -1,5 +1,10 @@
-import PocketBase from "pocketbase";
-const pb = new PocketBase(import.meta.env.PUBLIC_PB_URL || "http://127.0.0.1:8090");
+import PocketBase from 'pocketbase';
+import type { TypedPocketBase } from "./pocketbase-types";
+var path='';
+if(import.meta.env.MODE === 'development')
+    path = 'http://localhost:8090'    //localhost = machine de dev
+else path = 'https://sea301.manolia.kocaoglu.fr:443'   //url du site 
+const pb = new PocketBase(path) as TypedPocketBase;
 
 if (typeof window !== "undefined") {
   try { pb.authStore.loadFromCookie(document.cookie); } catch {}

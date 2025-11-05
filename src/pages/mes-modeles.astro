@@ -1,44 +1,31 @@
 ---
 import LayoutTaVue from "../layouts/LayoutTaVue.astro";
-import svgRaw from "@/assets/lunettes.svg?raw";
+import pb from "../lib/pb";
 
-// TODO: Récupérer les modèles depuis PocketBase
-const modeles = [
-  {
-    id: "1",
-    nom: "TaVue Classic",
-    prix: 289,
-    matMonture: "Acétate",
-    colMonture: "Noir",
-    matBranches: "Acétate",
-    colBranches: "Marron",
-    dateCreation: "2024-03-15"
-  },
-  {
-    id: "2",
-    nom: "TaVue Sport",
-    prix: 319,
-    matMonture: "Titane",
-    colMonture: "Bleu Marine",
-    matBranches: "Métal",
-    colBranches: "Argenté",
-    dateCreation: "2024-03-10"
-  },
-  {
-    id: "3",
-    nom: "TaVue Élégance",
-    prix: 339,
-    matMonture: "Acétate",
-    colMonture: "Beige Doré",
-    matBranches: "Bois",
-    colBranches: "Noyer",
-    dateCreation: "2024-03-05"
-  }
-];
+// Charger l'authentification
+const cookie = Astro.request.headers.get("cookie") || "";
+try { pb.authStore.loadFromCookie(cookie); } catch {}
+
+// Si pas connecté, rediriger vers login
+if (!pb.authStore.isValid) {
+  return Astro.redirect("/login");
+}
+
+// Récupérer les modèles de l'utilisateur
+let modeles = [];
+try {
+  const userId = pb.authStore.model?.id;
+  modeles = await pb.collection("lunettes").getFullList({
+    sort: '-created',
+    filter: `id_utilisateur = "${userId}"`
+  });
+} catch (e) {
+  console.error("Erreur chargement modèles:", e);
+}
 ---
 
 <LayoutTaVue title="Ma Collection — TaVue">
-  <div class="max-w-7xl mx-auto">
+  <div class="max-w-7xl mx-auto px-6">
     
     <!-- En-tête -->
     <div class="flex items-center justify-between mb-8">
@@ -59,7 +46,7 @@ const modeles = [
     </div>
 
     <!-- Filtres et tri -->
-    <div class="card bg-white border border-gray-200 mb-8">
+    <div class="card bg-white border border-gray-200 mb-8 shadow-sm">
       <div class="card-body p-6">
         <div class="flex flex-wrap items-center gap-4">
           
@@ -114,7 +101,7 @@ const modeles = [
             
             <!-- Image/SVG -->
             <figure class="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 p-8 relative overflow-hidden">
-              <div class="w-full h-full flex items-center justify-center" set:html={svgRaw}></div>
+              <div class="w-full h-full flex items-center justify-center max-w-md mx-auto" set:html={modele.svg_code || ""}></div>
               
               <!-- Actions rapides (hover) -->
               <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
@@ -145,10 +132,10 @@ const modeles = [
               <div class="flex items-start justify-between mb-3">
                 <div class="flex-1">
                   <h3 class="card-title text-lg text-gray-900 mb-1">
-                    {modele.nom}
+                    {modele.nom_modele || "TaVue Custom"}
                   </h3>
                   <p class="text-sm text-gray-500">
-                    Créé le {new Date(modele.dateCreation).toLocaleDateString('fr-FR', { 
+                    Créé le {new Date(modele.created).toLocaleDateString('fr-FR', { 
                       day: 'numeric', 
                       month: 'long', 
                       year: 'numeric' 
@@ -168,7 +155,15 @@ const modeles = [
                     <li><a href={`/configurateur?duplicate=${modele.id}`} class="text-sm">Dupliquer</a></li>
                     <li><a class="text-sm">Partager</a></li>
                     <div class="divider my-1"></div>
-                    <li><a class="text-sm text-red-600">Supprimer</a></li>
+                    <li>
+                      <button 
+                        class="text-sm text-red-600 delete-btn" 
+                        data-id={modele.id}
+                        data-name={modele.nom_modele || "ce modèle"}
+                      >
+                        Supprimer
+                      </button>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -177,18 +172,18 @@ const modeles = [
               <div class="space-y-2 mb-4">
                 <div class="flex items-center justify-between text-sm">
                   <span class="text-gray-600">Monture :</span>
-                  <span class="font-medium text-gray-900">{modele.matMonture} {modele.colMonture}</span>
+                  <span class="font-medium text-gray-900">{modele.materiau_monture} {modele.couleur_monture}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                   <span class="text-gray-600">Branches :</span>
-                  <span class="font-medium text-gray-900">{modele.matBranches} {modele.colBranches}</span>
+                  <span class="font-medium text-gray-900">{modele.materiau_branches} {modele.couleur_branches}</span>
                 </div>
               </div>
 
               <!-- Actions -->
               <div class="card-actions flex items-center justify-between pt-4 border-t border-gray-200">
                 <div class="text-2xl font-bold text-gray-900">
-                  {modele.prix} €
+                  {modele.prix_total} €
                 </div>
                 <a href={`/commande?modele=${modele.id}`} class="btn btn-primary btn-sm">
                   Commander
@@ -201,7 +196,7 @@ const modeles = [
       </div>
     ) : (
       <!-- État vide -->
-      <div class="card bg-white border border-gray-200">
+      <div class="card bg-white border border-gray-200 shadow-sm">
         <div class="card-body p-12 text-center">
           <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
             <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,4 +234,36 @@ const modeles = [
     )}
 
   </div>
+
+  <!-- Script de suppression -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Gérer les clics sur les boutons de suppression
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          const name = btn.getAttribute('data-name');
+          
+          if (confirm(`Êtes-vous sûr de vouloir supprimer ${name} ?`)) {
+            try {
+              const response = await fetch(`/api/deleteModel?id=${id}`, {
+                method: 'DELETE'
+              });
+              
+              if (response.ok) {
+                // Recharger la page
+                window.location.reload();
+              } else {
+                alert('Erreur lors de la suppression');
+              }
+            } catch (error) {
+              console.error('Erreur:', error);
+              alert('Erreur lors de la suppression');
+            }
+          }
+        });
+      });
+    });
+  </script>
 </LayoutTaVue>
