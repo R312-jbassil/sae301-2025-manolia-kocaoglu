@@ -1,0 +1,441 @@
+---
+import LayoutTaVue from "../layouts/LayoutTaVue.astro";
+import pb from "../lib/pb";
+
+// Charger l'authentification
+const cookie = Astro.request.headers.get("cookie") || "";
+try { pb.authStore.loadFromCookie(cookie); } catch {}
+
+// Si pas connecté, rediriger vers login
+if (!pb.authStore.isValid) {
+  return Astro.redirect("/login");
+}
+
+const userId = pb.authStore.model?.id;
+let error = "";
+let success = "";
+
+// Récupérer les infos utilisateur
+let userAuth = pb.authStore.model;
+let userProfile: any = null;
+
+try {
+  userProfile = await pb.collection("utilisateur").getOne(userId);
+} catch (e) {
+  console.error("Erreur profil:", e);
+}
+
+// Traiter le formulaire
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const action = formData.get("action");
+
+  if (action === "update_profile") {
+    try {
+      const updateData: any = {
+        nom: String(formData.get("nom") || ""),
+        prenom: String(formData.get("prenom") || "")
+      };
+
+      await pb.collection("utilisateur").update(userId, updateData);
+      
+      success = "Profil mis à jour avec succès !";
+      userProfile = await pb.collection("utilisateur").getOne(userId);
+    } catch (e: any) {
+      error = "Erreur lors de la mise à jour : " + e?.message;
+    }
+  }
+
+  if (action === "update_avatar") {
+    try {
+      const avatarFile = formData.get("avatar") as File;
+      
+      if (avatarFile && avatarFile.size > 0) {
+        const updateData = new FormData();
+        updateData.append("avatar", avatarFile);
+
+        await pb.collection("utilisateur").update(userId, updateData);
+        
+        success = "Avatar mis à jour avec succès !";
+        userProfile = await pb.collection("utilisateur").getOne(userId);
+      } else {
+        error = "Veuillez sélectionner une image.";
+      }
+    } catch (e: any) {
+      error = "Erreur lors de l'upload : " + e?.message;
+    }
+  }
+
+  if (action === "delete_avatar") {
+    try {
+      await pb.collection("utilisateur").update(userId, {
+        avatar: null
+      });
+      
+      success = "Avatar supprimé avec succès !";
+      userProfile = await pb.collection("utilisateur").getOne(userId);
+    } catch (e: any) {
+      error = "Erreur lors de la suppression : " + e?.message;
+    }
+  }
+
+  if (action === "update_email") {
+    try {
+      const newEmail = String(formData.get("email") || "");
+      
+      await pb.collection("users").update(userId, {
+        email: newEmail
+      });
+      
+      success = "Email mis à jour avec succès !";
+      userAuth = pb.authStore.model;
+    } catch (e: any) {
+      error = "Erreur lors de la mise à jour de l'email : " + e?.message;
+    }
+  }
+
+  if (action === "update_password") {
+    try {
+      const oldPassword = String(formData.get("oldPassword") || "");
+      const newPassword = String(formData.get("newPassword") || "");
+      const confirmPassword = String(formData.get("confirmPassword") || "");
+
+      if (newPassword !== confirmPassword) {
+        error = "Les mots de passe ne correspondent pas.";
+      } else if (newPassword.length < 8) {
+        error = "Le mot de passe doit contenir au moins 8 caractères.";
+      } else {
+        await pb.collection("users").update(userId, {
+          oldPassword: oldPassword,
+          password: newPassword,
+          passwordConfirm: confirmPassword
+        });
+        
+        success = "Mot de passe modifié avec succès !";
+      }
+    } catch (e: any) {
+      error = "Erreur : Ancien mot de passe incorrect ou " + e?.message;
+    }
+  }
+}
+
+// Obtenir l'URL de l'avatar
+const avatarUrl = userProfile?.avatar 
+  ? pb.files.getUrl(userProfile, userProfile.avatar, { thumb: '200x200' })
+  : `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.prenom || '')}+${encodeURIComponent(userProfile?.nom || '')}&size=200&background=2C3E50&color=fff`;
+---
+
+<LayoutTaVue title="Mon Profil — TaVue">
+  <div class="max-w-5xl mx-auto px-6 py-12">
+    
+    <!-- En-tête -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-serif font-semibold text-gray-900 mb-2">
+        Mon Profil
+      </h1>
+      <p class="text-gray-600">
+        Gérez vos informations personnelles et vos paramètres
+      </p>
+    </div>
+
+    <!-- Alertes -->
+    {error && (
+      <div class="alert alert-error bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span class="text-sm">{error}</span>
+      </div>
+    )}
+
+    {success && (
+      <div class="alert alert-success bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 mb-6">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span class="text-sm">{success}</span>
+      </div>
+    )}
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        
+        <!-- Card Avatar -->
+        <div class="card bg-white border border-gray-200 shadow-sm">
+          <div class="card-body p-6 text-center">
+            <div class="relative inline-block mb-4">
+              <img 
+                src={avatarUrl}
+                alt="Avatar"
+                class="w-32 h-32 rounded-full object-cover ring-4 ring-gray-100"
+              />
+              <button 
+                onclick="document.getElementById('avatar-modal').showModal()"
+                class="absolute bottom-0 right-0 btn btn-circle btn-sm btn-primary"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </button>
+            </div>
+            
+            <h3 class="text-xl font-semibold text-gray-900 mb-1">
+              {userProfile?.prenom} {userProfile?.nom}
+            </h3>
+            <p class="text-sm text-gray-600 mb-4">
+              {userAuth?.email}
+            </p>
+
+            <div class="badge badge-outline">Membre depuis {new Date(userAuth?.created).getFullYear()}</div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="card bg-white border border-gray-200 shadow-sm">
+          <div class="card-body p-4">
+            <ul class="menu menu-compact">
+              <li><a href="#informations" class="active">Informations personnelles</a></li>
+              <li><a href="#securite">Sécurité</a></li>
+              <li><a href="#preferences">Préférences</a></li>
+              <li><a href="/mes-modeles">Mes modèles</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenu principal -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Informations personnelles -->
+        <div id="informations" class="card bg-white border border-gray-200 shadow-sm">
+          <div class="card-body p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+              Informations personnelles
+            </h2>
+
+            <form method="POST" class="space-y-4">
+              <input type="hidden" name="action" value="update_profile" />
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Prénom
+                  </label>
+                  <input 
+                    name="prenom" 
+                    type="text" 
+                    value={userProfile?.prenom || ""}
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Nom
+                  </label>
+                  <input 
+                    name="nom" 
+                    type="text" 
+                    value={userProfile?.nom || ""}
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="pt-4">
+                <button type="submit" class="btn btn-primary">
+                  Enregistrer les modifications
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Sécurité -->
+        <div id="securite" class="card bg-white border border-gray-200 shadow-sm">
+          <div class="card-body p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+              Sécurité
+            </h2>
+
+            <!-- Modifier l'email -->
+            <div class="mb-6 pb-6 border-b border-gray-200">
+              <h3 class="font-semibold text-gray-900 mb-4">Adresse email</h3>
+              <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="update_email" />
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Nouvelle adresse email
+                  </label>
+                  <input 
+                    name="email" 
+                    type="email" 
+                    value={userAuth?.email || ""}
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-outline btn-sm">
+                  Modifier l'email
+                </button>
+              </form>
+            </div>
+
+            <!-- Modifier le mot de passe -->
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-4">Mot de passe</h3>
+              <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="update_password" />
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Mot de passe actuel
+                  </label>
+                  <input 
+                    name="oldPassword" 
+                    type="password" 
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Nouveau mot de passe
+                  </label>
+                  <input 
+                    name="newPassword" 
+                    type="password" 
+                    minlength="8"
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Confirmer le nouveau mot de passe
+                  </label>
+                  <input 
+                    name="confirmPassword" 
+                    type="password" 
+                    minlength="8"
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-outline btn-sm">
+                  Modifier le mot de passe
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Préférences -->
+        <div id="preferences" class="card bg-white border border-gray-200 shadow-sm">
+          <div class="card-body p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+              Préférences
+            </h2>
+
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900">Notifications par email</div>
+                  <div class="text-sm text-gray-600">Recevoir les nouveautés et offres</div>
+                </div>
+                <input type="checkbox" class="toggle toggle-primary" checked />
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900">Suivi des commandes</div>
+                  <div class="text-sm text-gray-600">Notifications sur l'état de vos commandes</div>
+                </div>
+                <input type="checkbox" class="toggle toggle-primary" checked />
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900">Newsletter</div>
+                  <div class="text-sm text-gray-600">Conseils et tendances lunetterie</div>
+                </div>
+                <input type="checkbox" class="toggle toggle-primary" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Avatar -->
+  <dialog id="avatar-modal" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Modifier l'avatar</h3>
+      
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        <input type="hidden" name="action" value="update_avatar" />
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Choisir une image
+          </label>
+          <input 
+            name="avatar" 
+            type="file" 
+            accept="image/*"
+            class="file-input file-input-bordered w-full"
+            required
+          />
+          <p class="text-xs text-gray-500 mt-1">
+            JPG, PNG ou GIF - Max 5MB
+          </p>
+        </div>
+
+        <div class="modal-action">
+          <button type="submit" class="btn btn-primary">
+            Enregistrer
+          </button>
+          <button type="button" class="btn" onclick="document.getElementById('avatar-modal').close()">
+            Annuler
+          </button>
+        </div>
+      </form>
+
+      {userProfile?.avatar && (
+        <form method="POST" class="mt-4 pt-4 border-t border-gray-200">
+          <input type="hidden" name="action" value="delete_avatar" />
+          <button type="submit" class="btn btn-outline btn-error btn-sm btn-block">
+            Supprimer l'avatar actuel
+          </button>
+        </form>
+      )}
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+</LayoutTaVue>
+
+<script>
+  // Auto-scroll vers la section si hash présent
+  if (window.location.hash) {
+    const target = document.querySelector(window.location.hash);
+    if (target) {
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }
+</script>

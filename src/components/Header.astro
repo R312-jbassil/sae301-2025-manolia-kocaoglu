@@ -1,8 +1,36 @@
 ---
-const user = { 
-  name: "Jean Dupont", 
-  avatar: "https://i.pravatar.cc/64?u=jd" 
-};
+import pb from "../lib/pb";
+
+// Charger l'authentification
+const cookie = Astro.request.headers.get("cookie") || "";
+try { pb.authStore.loadFromCookie(cookie); } catch {}
+
+// Récupérer les infos utilisateur si connecté
+let isAuthenticated = pb.authStore.isValid;
+let userAuth = pb.authStore.model;
+let userProfile: any = null;
+let avatarUrl = "";
+
+if (isAuthenticated && userAuth?.id) {
+  try {
+    userProfile = await pb.collection("utilisateur").getOne(userAuth.id);
+    
+    // Obtenir l'URL de l'avatar
+    if (userProfile?.avatar) {
+      avatarUrl = pb.files.getUrl(userProfile, userProfile.avatar, { thumb: '100x100' });
+    } else {
+      // Avatar par défaut avec initiales
+      const initials = `${userProfile?.prenom?.[0] || ''}${userProfile?.nom?.[0] || ''}`.toUpperCase();
+      avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=100&background=2C3E50&color=fff&bold=true`;
+    }
+  } catch (e) {
+    console.error("Erreur chargement profil:", e);
+    isAuthenticated = false;
+  }
+}
+
+// Avatar par défaut pour utilisateur non connecté
+const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=E5E7EB&color=6B7280&bold=true";
 
 const navItems = [
   { href: "/configurateur", label: "Configurateur" },
@@ -56,36 +84,94 @@ const navItems = [
         </ul>
       </div>
 
-      <!-- Avatar utilisateur -->
+      <!-- Avatar utilisateur / Connexion -->
       <div class="dropdown dropdown-end">
         <label tabindex="0" class="btn btn-ghost btn-circle avatar">
           <div class="w-9 h-9 rounded-full ring-2 ring-gray-200 ring-offset-2">
             <img 
-              alt={user.name} 
-              src={user.avatar} 
+              alt={isAuthenticated ? `${userProfile?.prenom} ${userProfile?.nom}` : "Compte"} 
+              src={isAuthenticated ? avatarUrl : defaultAvatar} 
               loading="lazy"
               class="rounded-full object-cover"
             />
           </div>
         </label>
         <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-56 mt-3 border border-gray-200">
-          <li class="menu-title px-4 py-2">
-            <span class="text-sm font-semibold text-gray-900">{user.name}</span>
-          </li>
-          <div class="divider my-1"></div>
-          <li><a href="/mes-modeles" class="text-sm">Mes modèles</a></li>
-          <li><a href="/configurateur" class="text-sm">Configurateur</a></li>
-          <div class="divider my-1"></div>
-            <li>
-            <a href="/login" id="login-btn" class="text-sm">
-              Se connecter
-            </a>
-            </li>
-          <li>
-            <button id="logout-btn" class="text-sm text-red-600">
-              Se déconnecter
-            </button>
-          </li>
+          
+          {isAuthenticated ? (
+            <>
+              <!-- Utilisateur connecté -->
+              <li class="menu-title px-4 py-2">
+                <span class="text-sm font-semibold text-gray-900">
+                  {userProfile?.prenom} {userProfile?.nom}
+                </span>
+                <span class="text-xs text-gray-500 font-normal">
+                  {userAuth?.email}
+                </span>
+              </li>
+              <div class="divider my-1"></div>
+              <li><a href="/profil" class="text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                Mon profil
+              </a></li>
+              <li><a href="/mes-modeles" class="text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                Mes modèles
+              </a></li>
+              <li><a href="/configurateur" class="text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                </svg>
+                Configurateur
+              </a></li>
+              <div class="divider my-1"></div>
+              <li>
+                <button id="logout-btn" class="text-sm text-red-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                  Se déconnecter
+                </button>
+              </li>
+            </>
+          ) : (
+            <>
+              <!-- Utilisateur non connecté -->
+              <li class="menu-title px-4 py-2">
+                <span class="text-sm font-semibold text-gray-900">
+                  Mon compte
+                </span>
+              </li>
+              <div class="divider my-1"></div>
+              <li>
+                <a href="/login" class="text-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                  </svg>
+                  Se connecter
+                </a>
+              </li>
+              <li>
+                <a href="/signup" class="text-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                  </svg>
+                  Créer un compte
+                </a>
+              </li>
+              <div class="divider my-1"></div>
+              <li><a href="/configurateur" class="text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                </svg>
+                Essayer le configurateur
+              </a></li>
+            </>
+          )}
         </ul>
       </div>
     </div>

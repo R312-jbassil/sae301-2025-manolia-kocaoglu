@@ -127,7 +127,7 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
                 <span class="font-medium text-gray-900" id="sum-col-branches">Marron</span>
               </div>
               <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Couleur verres :</span>
+                <span class="text-gray-600">Teinte verres :</span>
                 <span class="font-medium text-gray-900" id="sum-col-verres">Transparent</span>
               </div>
               <div class="flex justify-between text-sm">
@@ -213,12 +213,12 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
 
             <div class="divider"></div>
 
-            <!-- Couleur verres -->
+            <!-- Teinte verres -->
             <div class="mb-8">
               <label class="block text-sm font-medium text-gray-700 mb-3">
-                Couleur des verres
+                Teinte des verres
               </label>
-              <div id="col-verres" class="flex flex-wrap gap-3"></div>
+              <div id="col-verres" class="grid grid-cols-3 gap-3"></div>
             </div>
 
             <div class="divider"></div>
@@ -312,12 +312,14 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
     ];
 
     const COLORS_VERRES = [
-      { hex: "rgba(255,255,255,0.1)", name: "Transparent" },
-      { hex: "rgba(0,0,0,0.2)", name: "Gris Léger" },
-      { hex: "rgba(0,0,0,0.5)", name: "Gris Foncé" },
-      { hex: "rgba(139,69,19,0.3)", name: "Marron" },
-      { hex: "rgba(0,100,0,0.3)", name: "Vert" },
-      { hex: "rgba(0,0,139,0.3)", name: "Bleu" }
+      { hex: "rgba(255,255,255,0.1)", name: "Transparent", price: 0 },
+      { hex: "rgba(0,0,0,0.2)", name: "Gris Léger", price: 15 },
+      { hex: "rgba(0,0,0,0.5)", name: "Gris Foncé", price: 20 },
+      { hex: "rgba(139,69,19,0.3)", name: "Marron", price: 20 },
+      { hex: "rgba(0,100,0,0.3)", name: "Vert", price: 25 },
+      { hex: "rgba(0,0,139,0.3)", name: "Bleu", price: 25 },
+      { hex: "rgba(255,105,180,0.3)", name: "Rose", price: 25 },
+      { hex: "rgba(255,165,0,0.3)", name: "Orange", price: 25 }
     ];
     
     const MATS = ["Acétate", "Métal", "Titane", "Bois"];
@@ -347,9 +349,11 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
     const $ = (id) => document.getElementById(id);
     
     function price() {
+      const verresPrice = COLORS_VERRES.find(c => c.hex === state.colVerres)?.price || 0;
       return state.base + 
         (SURCHARGES[state.matMonture].m || 0) + 
-        (SURCHARGES[state.matBranches].b || 0);
+        (SURCHARGES[state.matBranches].b || 0) +
+        verresPrice;
     }
 
     function injectSVG() {
@@ -359,7 +363,6 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
       // Applique les couleurs au SVG
       const svg = host.querySelector("svg");
       if (svg) {
-        // Assure que le SVG prend toute la largeur disponible
         svg.style.maxWidth = "100%";
         svg.style.height = "auto";
         
@@ -429,6 +432,43 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
       });
     }
 
+    function renderVerresSwatches() {
+      const box = $("col-verres");
+      box.innerHTML = "";
+      COLORS_VERRES.forEach(color => {
+        const container = document.createElement("div");
+        container.className = "text-center";
+        
+        const swatch = document.createElement("button");
+        swatch.type = "button";
+        swatch.className = `w-full aspect-square rounded-lg transition-all ${
+          state.colVerres === color.hex 
+            ? "ring-4 ring-[#2C3E50] ring-offset-2 scale-105" 
+            : "ring-1 ring-gray-300 hover:scale-105"
+        }`;
+        swatch.style.backgroundColor = color.hex;
+        swatch.title = color.name;
+        swatch.onclick = () => {
+          state.colVerres = color.hex;
+          state.colVerresNom = color.name;
+          update();
+        };
+        
+        const label = document.createElement("div");
+        label.className = "text-xs text-gray-600 mt-1";
+        label.textContent = color.name;
+        
+        const priceLabel = document.createElement("div");
+        priceLabel.className = "text-xs font-semibold text-[#2C3E50]";
+        priceLabel.textContent = color.price > 0 ? `+${color.price}€` : "Inclus";
+        
+        container.appendChild(swatch);
+        container.appendChild(label);
+        container.appendChild(priceLabel);
+        box.appendChild(container);
+      });
+    }
+
     function update() {
       injectSVG();
       
@@ -445,10 +485,9 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
         state.colBranches = c.hex;
         state.colBranchesNom = c.name;
       });
-      renderColorSwatches("col-verres", state.colVerres, (c) => {
-        state.colVerres = c.hex;
-        state.colVerresNom = c.name;
-      }, COLORS_VERRES);
+      
+      // Verres
+      renderVerresSwatches();
       
       // Dimensions
       $("val-pont").textContent = String(state.largeurPont);
@@ -482,7 +521,6 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
 
     $("save").addEventListener("click", async () => {
       try {
-        // Demander le nom du modèle
         const nomModele = prompt("Donnez un nom à votre modèle :", "TaVue Custom");
         
         if (!nomModele) {
@@ -490,11 +528,9 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
           return;
         }
         
-        // Créer une copie du SVG avec les couleurs appliquées
         const host = $("svg-host");
         const svgCopy = host.innerHTML;
         
-        // Préparer les données à sauvegarder
         const modelData = {
           nom_modele: nomModele.trim(),
           materiau_monture: state.matMonture,
@@ -508,7 +544,6 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
           svg_code: svgCopy
         };
 
-        // Envoyer au serveur
         const response = await fetch('/api/saveSVG', {
           method: 'POST',
           headers: {
@@ -520,7 +555,6 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
         if (response.ok) {
           const result = await response.json();
           alert("✓ Modèle sauvegardé dans votre collection");
-          // Rediriger vers la collection après 1 seconde
           setTimeout(() => {
             window.location.href = "/mes-modeles";
           }, 1000);
@@ -542,19 +576,17 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
     const loadId = urlParams.get('load');
     
     if (loadId) {
-      // Charger le modèle depuis l'API
       fetch(`/api/getModel?id=${loadId}`)
         .then(res => res.json())
         .then(data => {
           if (data) {
-            // Appliquer les données du modèle
             state.matMonture = data.materiau_monture || "Acétate";
             state.matBranches = data.materiau_branches || "Acétate";
             
-            // Trouver les couleurs correspondantes
             const montureColor = COLORS.find(c => c.name === data.couleur_monture) || COLORS[0];
             const branchesColor = COLORS.find(c => c.name === data.couleur_branches) || COLORS[1];
             const verresColor = COLORS_VERRES.find(c => c.name === data.couleur_verres) || COLORS_VERRES[0];
+            
             state.colMonture = montureColor.hex;
             state.colMontureNom = montureColor.name;
             state.colBranches = branchesColor.hex;
@@ -565,14 +597,11 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
             state.largeurPont = data.largeur_pont || 18;
             state.tailleVerres = data.taille_verres || 52;
             
-            // Mettre à jour les sliders
             $("pont").value = state.largeurPont;
             $("verres").value = state.tailleVerres;
             
-            // Mettre à jour le nom du modèle
             $("model-name").textContent = data.nom_modele || "TaVue Custom";
             
-            // Rafraîchir l'affichage
             update();
           }
         })
