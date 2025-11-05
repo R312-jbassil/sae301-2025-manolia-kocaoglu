@@ -127,6 +127,10 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
                 <span class="font-medium text-gray-900" id="sum-col-branches">Marron</span>
               </div>
               <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Couleur verres :</span>
+                <span class="font-medium text-gray-900" id="sum-col-verres">Transparent</span>
+              </div>
+              <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Largeur du pont :</span>
                 <span class="font-medium text-gray-900"><span id="sum-pont">18</span> mm</span>
               </div>
@@ -205,6 +209,16 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
                 Couleur des branches
               </label>
               <div id="col-branches" class="flex flex-wrap gap-3"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Couleur verres -->
+            <div class="mb-8">
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Couleur des verres
+              </label>
+              <div id="col-verres" class="flex flex-wrap gap-3"></div>
             </div>
 
             <div class="divider"></div>
@@ -297,6 +311,15 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
       { hex: "#1E3A8A", name: "Bleu Royal" }
     ];
 
+    const COLORS_VERRES = [
+      { hex: "rgba(255,255,255,0.1)", name: "Transparent" },
+      { hex: "rgba(0,0,0,0.2)", name: "Gris Léger" },
+      { hex: "rgba(0,0,0,0.5)", name: "Gris Foncé" },
+      { hex: "rgba(139,69,19,0.3)", name: "Marron" },
+      { hex: "rgba(0,100,0,0.3)", name: "Vert" },
+      { hex: "rgba(0,0,139,0.3)", name: "Bleu" }
+    ];
+    
     const MATS = ["Acétate", "Métal", "Titane", "Bois"];
     
     const SURCHARGES = {
@@ -314,6 +337,8 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
       colMontureNom: COLORS[0].name,
       colBranches: COLORS[1].hex,
       colBranchesNom: COLORS[1].name,
+      colVerres: COLORS_VERRES[0].hex,
+      colVerresNom: COLORS_VERRES[0].name,
       largeurPont: 18,
       tailleVerres: 52,
       svg: svgContent
@@ -355,6 +380,15 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
             el.style.stroke = state.colBranches;
           }
         });
+
+        // Style pour les verres
+        const verresElements = svg.querySelectorAll("#verres path");
+        verresElements.forEach(el => {
+          if (el.classList.contains('cls-5')) {
+            el.style.fill = state.colVerres;
+            el.style.opacity = "1";
+          }
+        });
       }
     }
 
@@ -374,10 +408,10 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
       });
     }
 
-    function renderColorSwatches(containerId, current, onPick) {
+    function renderColorSwatches(containerId, current, onPick, colorArray = COLORS) {
       const box = $(containerId);
       box.innerHTML = "";
-      COLORS.forEach(color => {
+      colorArray.forEach(color => {
         const swatch = document.createElement("button");
         swatch.type = "button";
         swatch.className = `w-10 h-10 rounded-full transition-all ${
@@ -411,6 +445,10 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
         state.colBranches = c.hex;
         state.colBranchesNom = c.name;
       });
+      renderColorSwatches("col-verres", state.colVerres, (c) => {
+        state.colVerres = c.hex;
+        state.colVerresNom = c.name;
+      }, COLORS_VERRES);
       
       // Dimensions
       $("val-pont").textContent = String(state.largeurPont);
@@ -421,6 +459,7 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
       $("sum-col-monture").textContent = state.colMontureNom;
       $("sum-branches").textContent = state.matBranches;
       $("sum-col-branches").textContent = state.colBranchesNom;
+      $("sum-col-verres").textContent = state.colVerresNom;
       $("sum-pont").textContent = String(state.largeurPont);
       $("sum-verres").textContent = String(state.tailleVerres);
       
@@ -443,17 +482,26 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
 
     $("save").addEventListener("click", async () => {
       try {
+        // Demander le nom du modèle
+        const nomModele = prompt("Donnez un nom à votre modèle :", "TaVue Custom");
+        
+        if (!nomModele) {
+          alert("Vous devez donner un nom au modèle pour le sauvegarder.");
+          return;
+        }
+        
         // Créer une copie du SVG avec les couleurs appliquées
         const host = $("svg-host");
         const svgCopy = host.innerHTML;
         
         // Préparer les données à sauvegarder
         const modelData = {
-          nom_modele: "TaVue Custom",
+          nom_modele: nomModele.trim(),
           materiau_monture: state.matMonture,
           couleur_monture: state.colMontureNom,
           materiau_branches: state.matBranches,
           couleur_branches: state.colBranchesNom,
+          couleur_verres: state.colVerresNom,
           largeur_pont: state.largeurPont,
           taille_verres: state.tailleVerres,
           prix_total: price(),
@@ -506,11 +554,13 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
             // Trouver les couleurs correspondantes
             const montureColor = COLORS.find(c => c.name === data.couleur_monture) || COLORS[0];
             const branchesColor = COLORS.find(c => c.name === data.couleur_branches) || COLORS[1];
-            
+            const verresColor = COLORS_VERRES.find(c => c.name === data.couleur_verres) || COLORS_VERRES[0];
             state.colMonture = montureColor.hex;
             state.colMontureNom = montureColor.name;
             state.colBranches = branchesColor.hex;
             state.colBranchesNom = branchesColor.name;
+            state.colVerres = verresColor.hex;
+            state.colVerresNom = verresColor.name;
             
             state.largeurPont = data.largeur_pont || 18;
             state.tailleVerres = data.taille_verres || 52;

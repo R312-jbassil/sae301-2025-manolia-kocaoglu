@@ -76,9 +76,40 @@ const navItems = [
           <li><a href="/mes-modeles" class="text-sm">Mes modèles</a></li>
           <li><a href="/configurateur" class="text-sm">Configurateur</a></li>
           <div class="divider my-1"></div>
-          <li><a href="/login" class="text-sm text-[#2C3E50]">Se connecter</a></li>
+            <li>
+            <a href="/login" id="login-btn" class="text-sm">
+              Se connecter
+            </a>
+            </li>
+          <li>
+            <button id="logout-btn" class="text-sm text-red-600">
+              Se déconnecter
+            </button>
+          </li>
         </ul>
       </div>
     </div>
   </nav>
 </header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async () => {
+        if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+          try {
+            // Supprimer le cookie d'authentification
+            document.cookie = "pb_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            
+            // Rediriger vers la page d'accueil
+            window.location.href = '/';
+          } catch (error) {
+            console.error('Erreur de déconnexion:', error);
+            alert('Erreur lors de la déconnexion');
+          }
+        }
+      });
+    }
+  });
+</script>
