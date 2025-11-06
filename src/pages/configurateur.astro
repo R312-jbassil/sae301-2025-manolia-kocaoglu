@@ -265,38 +265,108 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
             <div class="divider"></div>
 
             <!-- IA Generation -->
-            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-5 border border-gray-200">
-              <div class="flex items-start gap-3 mb-4">
-                <div class="p-2 bg-[#2C3E50] rounded-lg">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-semibold text-gray-900 text-sm mb-1">
-                    Génération par IA
-                  </h4>
-                  <p class="text-xs text-gray-600">
-                    Décrivez vos préférences et laissez l'IA créer votre monture idéale
-                  </p>
-                </div>
-              </div>
-              <textarea 
-                class="textarea textarea-bordered w-full text-sm mb-3" 
-                placeholder="Ex : une monture élégante pour le bureau, avec des tons chauds..."
-                rows="3"
-              ></textarea>
-              <button class="btn btn-sm btn-primary btn-block">
-                Générer avec l'IA
-              </button>
-            </div>
+            <!-- REMPLACEZ CETTE SECTION DANS VOTRE CONFIGURATEUR.ASTRO -->
+<!-- Cherchez la section "IA Generation" et remplacez-la par ce code -->
 
-          </div>
-        </div>
+<div class="divider"></div>
 
-      </aside>
+<!-- IA Generation -->
+<div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-5 border border-gray-200">
+  <div class="flex items-start gap-3 mb-4">
+    <div class="p-2 bg-[#2C3E50] rounded-lg">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+    </div>
+    <div class="flex-1">
+      <h4 class="font-semibold text-gray-900 text-sm mb-1">
+        Génération par IA
+      </h4>
+      <p class="text-xs text-gray-600">
+        Décrivez vos préférences et laissez l'IA créer votre monture idéale
+      </p>
     </div>
   </div>
+  
+  <!-- Exemples de prompts (optionnel - à décommenter si désiré) -->
+  <!--
+  <details class="mb-3">
+    <summary class="text-xs text-gray-600 cursor-pointer hover:text-gray-900 mb-2">
+      💡 Voir des exemples de descriptions
+    </summary>
+    <div class="space-y-1 ml-4">
+      <button 
+        class="text-xs text-left text-gray-600 hover:text-[#2C3E50] hover:underline block w-full"
+        onclick="document.getElementById('ai-prompt-input').value = 'Lunettes rondes vintage en métal doré avec verres teintés marron'"
+      >
+        → Lunettes rondes vintage en métal doré
+      </button>
+      <button 
+        class="text-xs text-left text-gray-600 hover:text-[#2C3E50] hover:underline block w-full"
+        onclick="document.getElementById('ai-prompt-input').value = 'Monture rectangulaire moderne en acétate noir mat'"
+      >
+        → Monture rectangulaire moderne
+      </button>
+      <button 
+        class="text-xs text-left text-gray-600 hover:text-[#2C3E50] hover:underline block w-full"
+        onclick="document.getElementById('ai-prompt-input').value = 'Design minimaliste en titane argenté avec branches fines'"
+      >
+        → Design minimaliste en titane
+      </button>
+      <button 
+        class="text-xs text-left text-gray-600 hover:text-[#2C3E50] hover:underline block w-full"
+        onclick="document.getElementById('ai-prompt-input').value = 'Style cat-eye années 50 en acétate rouge bordeaux'"
+      >
+        → Style cat-eye années 50
+      </button>
+    </div>
+  </details>
+  -->
+  
+  <!-- Zone de saisie -->
+  <textarea 
+    id="ai-prompt-input"
+    class="textarea textarea-bordered w-full text-sm mb-3" 
+    placeholder="Ex : une monture élégante pour le bureau, avec des tons chauds..."
+    rows="3"
+  ></textarea>
+  
+  <!-- Bouton de génération -->
+  <button id="ai-generate-btn" class="btn btn-sm btn-primary btn-block">
+    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+    </svg>
+    Générer avec l'IA
+  </button>
+  
+  <!-- Zone de chargement -->
+  <div id="ai-loading" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+    <div class="flex items-center gap-3">
+      <span class="loading loading-spinner loading-sm text-[#2C3E50]"></span>
+      <span class="text-xs text-gray-700">L'IA génère votre monture...</span>
+    </div>
+  </div>
+
+  <!-- Zone d'erreur -->
+  <div id="ai-error" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+    <div class="flex items-start gap-2">
+      <svg class="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <p class="text-xs text-red-800" id="ai-error-message"></p>
+    </div>
+  </div>
+
+  <!-- Zone de succès -->
+  <div id="ai-success" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+    <div class="flex items-start gap-2">
+      <svg class="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <p class="text-xs text-green-800">Monture générée ! Vous pouvez maintenant la personnaliser.</p>
+    </div>
+  </div>
+</div>
 
   <!-- Script de configuration -->
   <script define:vars={{ svgContent }}>
