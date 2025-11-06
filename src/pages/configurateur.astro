@@ -716,5 +716,85 @@ document.getElementById('ai-generate-btn')?.addEventListener('click', async () =
   if (!p) { document.getElementById('ai-error-message').textContent = "Entrez une description"; document.getElementById('ai-error')?.classList.remove('hidden'); return; }
   await generateWithAI(p);
 });
+
+// === SECTION IA - À AJOUTER AVANT LA FERMETURE DU SCRIPT ===
+
+// Fonction de génération avec l'IA
+async function generateWithAI(prompt) {
+  const loadingEl = document.getElementById('ai-loading');
+  const errorEl = document.getElementById('ai-error');
+  const errorMsg = document.getElementById('ai-error-message');
+  const successEl = document.getElementById('ai-success');
+  const btn = document.getElementById('ai-generate-btn');
+  
+  try {
+    // Afficher le chargement
+    loadingEl?.classList.remove('hidden');
+    errorEl?.classList.add('hidden');
+    successEl?.classList.add('hidden');
+    btn?.setAttribute('disabled', '');
+    
+    // Appeler l'API
+    const response = await fetch('/api/generateSVG', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([
+        { role: 'user', content: prompt.trim() }
+      ])
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok || !data.svg) {
+      throw new Error(data.error || "Erreur lors de la génération");
+    }
+    
+    // Nettoyer le SVG
+    let svgCode = data.svg.content;
+    svgCode = svgCode.replace(/^```[\w]*\s*|\s*```$/g, '').trim();
+    const svgMatch = svgCode.match(/<svg[\s\S]*?<\/svg>/i);
+    if (svgMatch) {
+      svgCode = svgMatch[0];
+    }
+    
+    if (!svgCode) {
+      throw new Error("SVG invalide généré");
+    }
+    
+    // Mettre à jour le SVG dans l'état
+    state.svg = svgCode;
+    injectSVG();
+    
+    // Afficher le succès
+    loadingEl?.classList.add('hidden');
+    successEl?.classList.remove('hidden');
+    btn?.removeAttribute('disabled');
+    
+    setTimeout(() => successEl?.classList.add('hidden'), 5000);
+    
+  } catch (error) {
+    console.error("Erreur génération IA:", error);
+    loadingEl?.classList.add('hidden');
+    if (errorMsg) errorMsg.textContent = error.message;
+    errorEl?.classList.remove('hidden');
+    btn?.removeAttribute('disabled');
+  }
+}
+
+// Event listener pour le bouton de génération IA
+document.getElementById('ai-generate-btn')?.addEventListener('click', async () => {
+  const promptInput = document.getElementById('ai-prompt-input');
+  const prompt = promptInput?.value?.trim();
+  
+  if (!prompt) {
+    const errorEl = document.getElementById('ai-error');
+    const errorMsg = document.getElementById('ai-error-message');
+    if (errorMsg) errorMsg.textContent = "Veuillez entrer une description";
+    errorEl?.classList.remove('hidden');
+    return;
+  }
+  
+  await generateWithAI(prompt);
+});
   </script>
 </LayoutTaVue>
