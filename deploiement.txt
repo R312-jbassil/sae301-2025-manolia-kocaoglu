@@ -1,0 +1,8 @@
+lien du site: https://sae301.manolia-kocaoglu.fr 
+
+repository: https://github.com/R312-jbassil/sae301-2025-manolia-kocaoglu
+
+Admin PocketBase :
+email: manolia.koc@gmail.com
+password: jiDga2-zobruf-tiqtuv
+URL admin: https://sae301.manolia-kocaoglu.fr/_/

@@ -1,4 +1,4 @@
-- Nom:
-- Prénom:
-- URL pocketbase: 
-- URL:
+- Nom: kocaoglu
+- Prénom: manolia
+- URL pocketbase: https://sae301.manolia-kocaoglu.fr/_/
+- URL: https://sae301.manolia-kocaoglu.fr 
