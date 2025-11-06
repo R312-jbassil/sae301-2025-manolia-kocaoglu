@@ -50,4 +50,4 @@ jobs:
           npm ci
           npm install astro
           npm install send server-destroy
-          PORT=8747 pm2 restart sae301 || PORT=8747 pm2 start entry.mjs --name sae301
+          PORT=8748 pm2 restart sae301 || PORT=8748 pm2 start entry.mjs --name sae301
