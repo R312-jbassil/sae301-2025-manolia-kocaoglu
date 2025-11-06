@@ -677,5 +677,44 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://
         })
         .catch(err => console.error("Erreur chargement modèle:", err));
     }
+
+    // === IA ===
+async function generateWithAI(prompt) {
+  const l = document.getElementById('ai-loading');
+  const e = document.getElementById('ai-error');
+  const em = document.getElementById('ai-error-message');
+  const s = document.getElementById('ai-success');
+  const b = document.getElementById('ai-generate-btn');
+  
+  try {
+    l?.classList.remove('hidden'); e?.classList.add('hidden'); s?.classList.add('hidden'); b?.setAttribute('disabled', '');
+    
+    const r = await fetch('/api/generateGlassesAI', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt.trim() })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.error || "Erreur");
+    
+    let svg = d.svg.replace(/^```[\w]*\s*|\s*```$/g, '').trim();
+    const m = svg.match(/<svg[\s\S]*?<\/svg>/i);
+    if (m) svg = m[0];
+    if (!svg) throw new Error("SVG invalide");
+    
+    state.svg = svg;
+    injectSVG();
+    l?.classList.add('hidden'); s?.classList.remove('hidden'); b?.removeAttribute('disabled');
+    setTimeout(() => s?.classList.add('hidden'), 5000);
+  } catch (err) {
+    l?.classList.add('hidden'); if (em) em.textContent = err.message; e?.classList.remove('hidden'); b?.removeAttribute('disabled');
+  }
+}
+
+document.getElementById('ai-generate-btn')?.addEventListener('click', async () => {
+  const p = document.getElementById('ai-prompt-input')?.value?.trim();
+  if (!p) { document.getElementById('ai-error-message').textContent = "Entrez une description"; document.getElementById('ai-error')?.classList.remove('hidden'); return; }
+  await generateWithAI(p);
+});
   </script>
 </LayoutTaVue>
