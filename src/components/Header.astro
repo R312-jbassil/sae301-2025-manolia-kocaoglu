@@ -15,13 +15,11 @@ if (isAuthenticated && userAuth?.id) {
   try {
     userProfile = await pb.collection("utilisateur").getOne(userAuth.id);
     
-    // Obtenir l'URL de l'avatar
     if (userProfile?.avatar) {
       avatarUrl = pb.files.getUrl(userProfile, userProfile.avatar, { thumb: '100x100' });
     } else {
-      // Avatar par défaut avec initiales
       const initials = `${userProfile?.prenom?.[0] || ''}${userProfile?.nom?.[0] || ''}`.toUpperCase();
-      avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=100&background=2C3E50&color=fff&bold=true`;
+      avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=100&background=primary&color=fff&bold=true`;
     }
   } catch (e) {
     console.error("Erreur chargement profil:", e);
@@ -29,8 +27,7 @@ if (isAuthenticated && userAuth?.id) {
   }
 }
 
-// Avatar par défaut pour utilisateur non connecté
-const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=E5E7EB&color=6B7280&bold=true";
+const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=base-300&color=base-content&bold=true";
 
 const navItems = [
   { href: "/configurateur", label: "Configurateur" },
@@ -39,11 +36,11 @@ const navItems = [
 ];
 ---
 
-<header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+<header class="sticky top-0 z-50 bg-base-100 border-b shadow-sm">
   <nav class="navbar max-w-7xl mx-auto px-6 h-16">
     <!-- Logo -->
     <div class="navbar-start">
-      <a href="/" class="flex items-center gap-2 text-2xl font-serif font-semibold text-[#2C3E50] hover:opacity-80 transition-opacity">
+      <a href="/" class="flex items-center gap-2 text-2xl font-serif font-semibold text-primary hover:opacity-80 transition-opacity">
         <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
           <circle cx="12" cy="12" r="3"/>
@@ -59,7 +56,7 @@ const navItems = [
           <li>
             <a 
               href={item.href} 
-              class="text-sm font-medium text-gray-700 hover:text-[#2C3E50] hover:bg-gray-100 rounded-md px-4 py-2 transition-all"
+              class="text-sm font-medium hover:bg-base-200"
             >
               {item.label}
             </a>
@@ -77,7 +74,7 @@ const navItems = [
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </label>
-        <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-52 mt-3 border border-gray-200">
+        <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-lg w-52 mt-3">
           {navItems.map(item => (
             <li><a href={item.href} class="text-sm">{item.label}</a></li>
           ))}
@@ -87,7 +84,7 @@ const navItems = [
       <!-- Avatar utilisateur / Connexion -->
       <div class="dropdown dropdown-end">
         <label tabindex="0" class="btn btn-ghost btn-circle avatar">
-          <div class="w-9 h-9 rounded-full ring-2 ring-gray-200 ring-offset-2">
+          <div class="w-9 h-9 rounded-full ring-2 ring-base-300 ring-offset-2">
             <img 
               alt={isAuthenticated ? `${userProfile?.prenom} ${userProfile?.nom}` : "Compte"} 
               src={isAuthenticated ? avatarUrl : defaultAvatar} 
@@ -96,16 +93,16 @@ const navItems = [
             />
           </div>
         </label>
-        <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-56 mt-3 border border-gray-200">
+        <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-lg w-56 mt-3">
           
           {isAuthenticated ? (
             <>
               <!-- Utilisateur connecté -->
               <li class="menu-title px-4 py-2">
-                <span class="text-sm font-semibold text-gray-900">
+                <span class="text-sm font-semibold">
                   {userProfile?.prenom} {userProfile?.nom}
                 </span>
-                <span class="text-xs text-gray-500 font-normal">
+                <span class="text-xs opacity-60 font-normal">
                   {userAuth?.email}
                 </span>
               </li>
@@ -130,7 +127,7 @@ const navItems = [
               </a></li>
               <div class="divider my-1"></div>
               <li>
-                <button id="logout-btn" class="text-sm text-red-600">
+                <button id="logout-btn" class="text-sm text-error">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                   </svg>
@@ -142,7 +139,7 @@ const navItems = [
             <>
               <!-- Utilisateur non connecté -->
               <li class="menu-title px-4 py-2">
-                <span class="text-sm font-semibold text-gray-900">
+                <span class="text-sm font-semibold">
                   Mon compte
                 </span>
               </li>
@@ -185,10 +182,7 @@ const navItems = [
       logoutBtn.addEventListener('click', async () => {
         if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
           try {
-            // Supprimer le cookie d'authentification
             document.cookie = "pb_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            
-            // Rediriger vers la page d'accueil
             window.location.href = '/';
           } catch (error) {
             console.error('Erreur de déconnexion:', error);

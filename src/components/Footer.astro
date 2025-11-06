@@ -39,7 +39,7 @@ const socialLinks = [
 ];
 ---
 
-<footer class="bg-[#2C3E50] text-white mt-20">
+<footer class="bg-primary text-neutral-content mt-20">
   <!-- Contenu principal -->
   <div class="max-w-7xl mx-auto px-6 py-16">
     <div class="grid lg:grid-cols-4 gap-12">
@@ -53,7 +53,7 @@ const socialLinks = [
           </svg>
           TaVue
         </div>
-        <p class="text-sm text-gray-300 leading-relaxed mb-6">
+        <p class="text-sm opacity-70 leading-relaxed mb-6">
           L'excellence de la lunetterie française. Créez des montures élégantes, raffinées et parfaitement adaptées à votre style.
         </p>
         
@@ -63,7 +63,7 @@ const socialLinks = [
             <a 
               href={social.href}
               aria-label={social.label}
-              class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              class="btn btn-circle btn-sm btn-ghost opacity-70 hover:opacity-100"
             >
               <span class="text-xs font-semibold">{social.icon.slice(0, 2).toUpperCase()}</span>
             </a>
@@ -80,7 +80,7 @@ const socialLinks = [
               <li>
                 <a 
                   href={link.href}
-                  class="text-sm text-gray-300 hover:text-white transition-colors inline-block"
+                  class="text-sm opacity-70 hover:opacity-100 transition-opacity inline-block"
                 >
                   {link.label}
                 </a>
@@ -93,9 +93,9 @@ const socialLinks = [
   </div>
 
   <!-- Barre inférieure -->
-  <div class="border-t border-white/10">
+  <div class="border-t border-base-100/10">
     <div class="max-w-7xl mx-auto px-6 py-6">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-sm opacity-60">
         <div class="flex flex-wrap items-center gap-4">
           <span>© {currentYear} TaVue. Tous droits réservés.</span>
           <span class="hidden md:inline">•</span>
@@ -106,11 +106,11 @@ const socialLinks = [
         </div>
         
         <div class="flex flex-wrap items-center gap-4">
-          <a href="/mentions-legales" class="hover:text-white transition-colors">Mentions légales</a>
+          <a href="/mentions-legales" class="hover:opacity-100 transition-opacity">Mentions légales</a>
           <span>•</span>
-          <a href="/confidentialite" class="hover:text-white transition-colors">Confidentialité</a>
+          <a href="/confidentialite" class="hover:opacity-100 transition-opacity">Confidentialité</a>
           <span>•</span>
-          <a href="/cgv" class="hover:text-white transition-colors">CGV</a>
+          <a href="/cgv" class="hover:opacity-100 transition-opacity">CGV</a>
         </div>
       </div>
     </div>
