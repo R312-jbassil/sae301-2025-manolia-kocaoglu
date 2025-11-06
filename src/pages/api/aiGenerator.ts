@@ -129,3 +129,8 @@ interface AIGeneratorConfig {
     
     return cleaned;
   }
+
+  this.chatHistory.push(
+    { role: "user", content: prompt },
+    { role: "assistant", content: data.svg?.slice(0, 2000) || "[SVG généré]" }
+  );

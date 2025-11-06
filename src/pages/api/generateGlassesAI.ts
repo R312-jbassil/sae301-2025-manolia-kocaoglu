@@ -1,149 +1,152 @@
 // src/pages/api/generateGlassesAI.ts
-import type { APIRoute } from 'astro';
 
-const HF_TOKEN = import.meta.env.PUBLIC_HF_TOKEN;
-const MODEL = "Qwen/Qwen2.5-0.5B-Instruct"; // Modèle léger et rapide
+import type { APIRoute } from "astro";
+import fs from "node:fs";
+import path from "node:path";
 
-export const prerender = false;
+/** Charge .env à la main si process.env ne contient pas HF_TOKEN */
+function loadDotEnvIfNeeded() {
+  const hasHF =
+    !!process.env.HF_TOKEN || !!process.env.PRIVATE_HF_TOKEN;
+  if (hasHF) return;
+
+  try {
+    const envPath = path.resolve(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const raw = fs.readFileSync(envPath, "utf8");
+      for (const line of raw.split(/\r?\n/)) {
+        const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+        if (!m) continue;
+        const key = m[1];
+        let val = m[2];
+        // retire guillemets éventuels
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (process.env[key] == null) process.env[key] = val;
+      }
+    }
+  } catch {}
+}
+
+// tente de charger .env si besoin
+loadDotEnvIfNeeded();
+
+// -------- ENV (process.env d'abord, fallback import.meta.env) --------------
+const readEnv = (k: string): string | undefined => {
+  if (typeof process !== "undefined" && process?.env && process.env[k]) return process.env[k] as string;
+  const ie = (import.meta as any)?.env || {};
+  if (ie[k]) return ie[k];
+  if (ie[`PUBLIC_${k}`]) return ie[`PUBLIC_${k}`];
+  return undefined;
+};
+
+const HF_TOKEN = readEnv("HF_TOKEN") || readEnv("PRIVATE_HF_TOKEN");
+const MODEL = readEnv("HUGGINGFACE_MODEL") || "Qwen/Qwen2.5-7B-Instruct";
+
+// -------- Utils -------------------------------------------------------------
+const corsHeaders = () => ({
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+});
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body, null, 2), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...corsHeaders() },
+  });
+
+const buildFullPrompt = (userPrompt: string) => {
+  const system =
+    "Tu renvoies UNIQUEMENT un SVG inline valide (<svg>…</svg>) représentant des lunettes vue de face, 512x256. " +
+    "Classes: .frame, .temple-left, .temple-right, .lens-left, .lens-right. " +
+    "Pas de texte hors <svg>, pas de <script>, pas de <foreignObject>. Paths/rect/circle/ellipse uniquement.";
+  return `SYSTEM: ${system}\n\nUSER: Génère un SVG inline selon la description: ${userPrompt}`;
+};
+const extractSVG = (t: string) => t?.match?.(/<svg[\s\S]*?<\/svg>/i)?.[0] ?? null;
+
+// -------- Handlers ----------------------------------------------------------
+export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: corsHeaders() });
+
+export const GET: APIRoute = async () => {
+    return new Response(JSON.stringify({
+      ok: true,
+      expects: "POST",
+      hasToken: !!(process.env.HF_TOKEN || process.env.PRIVATE_HF_TOKEN || (import.meta as any)?.env?.HF_TOKEN),
+      model: MODEL
+    }, null, 2), {
+      status: 200,
+      headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders() },
+    });
+  };
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { prompt } = await request.json();
-    
-    if (!prompt || typeof prompt !== 'string') {
-      return new Response(JSON.stringify({ 
-        error: "Le prompt est requis" 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-
-    console.log("=== Génération IA de lunettes (HuggingFace) ===");
-    console.log("Modèle:", MODEL);
-    console.log("Prompt:", prompt);
-
-    // Construire le prompt optimisé pour Qwen
-    const fullPrompt = `Tu es un expert en génération de code SVG pour des lunettes.
-
-Tâche: Génère du code SVG valide pour des lunettes basées sur cette description: "${prompt}"
-
-RÈGLES STRICTES:
-1. Réponds UNIQUEMENT avec du code SVG, rien d'autre
-2. Structure requise:
-   <svg xmlns="http://www.w3.org/2000/svg" viewBox="50 100 500 200" width="100%" height="100%">
-     <g id="branches"><!-- branches des lunettes --></g>
-     <g id="monture"><!-- monture --></g>
-     <g id="verres"><!-- verres --></g>
-   </svg>
-3. Utilise des paths SVG pour dessiner les formes
-4. Applique les couleurs appropriées (fill, stroke)
-5. Ne génère QUE le code SVG, sans texte explicatif
-
-Génère maintenant le SVG:`;
-
-    // Appel à l'API HuggingFace
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${MODEL}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${HF_TOKEN}`,
-          'Content-Type': 'application/json',
+    if (!HF_TOKEN) {
+      return json(
+        {
+          success: false,
+          stage: "env",
+          error: "Missing HF token",
+          fix: [
+            "Vérifie que .env est dans le MÊME dossier que package.json",
+            "Ligne exacte: HF_TOKEN=hf_XXXX (sans guillemets, sans espaces)",
+            "Redémarre: npm run dev",
+            "Ou lance: HF_TOKEN=hf_XXXX npm run dev",
+          ],
+          debug: {
+            cwd: typeof process !== "undefined" ? process.cwd() : "no-process",
+            has_process_env: Boolean(process?.env?.HF_TOKEN || process?.env?.PRIVATE_HF_TOKEN),
+            has_import_meta_env: Boolean((import.meta as any)?.env?.HF_TOKEN || (import.meta as any)?.env?.PRIVATE_HF_TOKEN),
+          },
         },
-        body: JSON.stringify({
-          inputs: fullPrompt,
-          parameters: {
-            max_new_tokens: 2000,
-            temperature: 0.7,
-            top_p: 0.95,
-            return_full_text: false,
-          }
-        })
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erreur HuggingFace:", errorText);
-      throw new Error(`HuggingFace API error: ${response.status}`);
+        500
+      );
     }
 
-    const data = await response.json();
-    console.log("Réponse brute HF:", JSON.stringify(data).substring(0, 200));
-
-    // Extraire le texte généré
-    let generatedText = '';
-    if (Array.isArray(data) && data[0]?.generated_text) {
-      generatedText = data[0].generated_text;
-    } else if (data.generated_text) {
-      generatedText = data.generated_text;
-    } else {
-      throw new Error("Format de réponse inattendu");
+    if (!(request.headers.get("content-type") || "").includes("application/json")) {
+      return json({ success: false, error: "Content-Type must be application/json" }, 415);
     }
 
-    console.log("Texte généré:", generatedText.substring(0, 200));
+    const { prompt, style } = (await request.json()) as { prompt?: string; style?: string };
+    if (!prompt?.trim()) return json({ success: false, error: "Le champ 'prompt' est requis (string non vide)." }, 400);
 
-    // Extraire le SVG avec plusieurs patterns
-    let svgMatch = generatedText.match(/<svg[\s\S]*?<\/svg>/i);
-    
-    // Si pas de match, essayer de nettoyer
-    if (!svgMatch) {
-      // Supprimer les backticks markdown
-      generatedText = generatedText.replace(/```[\w]*\s*/g, '').replace(/```/g, '');
-      svgMatch = generatedText.match(/<svg[\s\S]*?<\/svg>/i);
-    }
-    
-    if (!svgMatch) {
-      console.error("Aucun SVG trouvé dans:", generatedText);
-      return new Response(JSON.stringify({ 
-        error: "L'IA n'a pas généré de SVG valide. Le modèle a peut-être besoin d'être plus chargé. Réessayez dans quelques secondes.",
-        rawResponse: generatedText,
-        tip: "Si le problème persiste, le modèle est peut-être en train de se charger sur HuggingFace"
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
+    const fullPrompt = buildFullPrompt([prompt.trim(), style?.trim()].filter(Boolean).join(". "));
 
-    const svgCode = svgMatch[0];
-    console.log("✓ SVG extrait:", svgCode.substring(0, 100));
-
-    // Valider que le SVG a les groupes requis
-    const hasBranches = svgCode.includes('id="branches"');
-    const hasMonture = svgCode.includes('id="monture"');
-    const hasVerres = svgCode.includes('id="verres"');
-
-    if (!hasBranches || !hasMonture || !hasVerres) {
-      console.warn("SVG incomplet, mais on le renvoie quand même");
-    }
-
-    return new Response(JSON.stringify({ 
-      success: true,
-      svg: svgCode,
-      model: MODEL,
-      info: {
-        hasBranches,
-        hasMonture,
-        hasVerres
-      }
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
+    const hfRes = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inputs: fullPrompt,
+        parameters: { max_new_tokens: 2048, temperature: 0.6, top_p: 0.95, return_full_text: false, do_sample: true },
+        options: { wait_for_model: true, use_cache: true },
+      }),
     });
 
+    const text = await hfRes.text();
+
+    if (!hfRes.ok) {
+      let details: any = null;
+      try { details = JSON.parse(text); } catch { details = text.slice(0, 1000); }
+      return json({ success: false, stage: "hf-error", status: hfRes.status, statusText: hfRes.statusText, model: MODEL, details }, hfRes.status);
+    }
+
+    let raw = text;
+    try {
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed) && parsed.length) {
+        const first = parsed[0];
+        raw = first?.generated_text ?? first?.text ?? (typeof first === "string" ? first : JSON.stringify(first));
+      } else if (parsed && typeof parsed === "object") {
+        raw = (parsed as any).generated_text ?? (parsed as any).text ?? text;
+      }
+    } catch { /* texte brut, ok */ }
+
+    const svg = extractSVG(raw);
+    if (!svg) return json({ success: false, stage: "parse-svg", error: "Aucun <svg> détecté.", sample: raw.slice(0, 800) }, 422);
+
+    return json({ success: true, model: MODEL, svg, info: { length: svg.length } });
   } catch (e: any) {
-    console.error("=== ERREUR GÉNÉRATION ===");
-    console.error("Message:", e?.message);
-    console.error("Stack:", e?.stack);
-    
-    return new Response(JSON.stringify({ 
-      error: "Erreur lors de la génération",
-      details: e?.message || "Erreur inconnue",
-      tip: "Vérifiez que votre token HuggingFace est valide et que le modèle est accessible"
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    return json({ success: false, stage: "unhandled", error: e?.message || String(e) }, 500);
   }
 };
